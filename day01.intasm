@@ -1,0 +1,64 @@
+; This is an "assembly language" for intcode. No official assembly language
+; exists, so the "compiled" version is also provided.
+;  ; is comment
+;  @ is label (memory location of the next token)
+;  $ is immediate mode value
+;  (label) is the value of that label
+; Label values were figured out with an interactive Python shell, and opcodes
+; were assembled by hand
+
+@get_num ;0
+inp (workspace)
+jez (workspace) $(end_elf)
+add $0 $1 (valid_num)
+add (workspace) (current_elf) (current_elf)
+jez $0 $(get_num)
+
+@end_elf ;16
+jez (valid_num) $(end_program)
+add $0 $0 (valid_num)
+lt (top_elf_1) (current_elf) (workspace)
+jnz (workspace) $(push_three)
+lt (top_elf_2) (current_elf) (workspace)
+jnz (workspace) $(push_two)
+lt (top_elf_3) (current_elf) (workspace)
+jnz (workspace) $(push_one)
+jez $0, $(reset_elf)
+
+@push_three ;47
+add (top_elf_2) $0 (top_elf_3)
+add (top_elf_1) $0 (top_elf_2)
+add (current_elf) $0 (top_elf_1)
+jez $0, $(reset_elf)
+
+@push_two ;62
+add (top_elf_2) $0 (top_elf_3)
+add (current_elf) $0 (top_elf_2)
+jez $0, $(reset_elf)
+
+@push_one ;73
+add (current_elf) $0 (top_elf_3)
+
+@reset_elf ;77
+add $0 $0 (current_elf)
+jez $0 $(get_num)
+
+@end_program ;84
+out (top_elf_1)
+add (top_elf_1) (top_elf_2) (workspace)
+add (top_elf_3) (workspace) (workspace)
+out (workspace)
+hlt
+
+@workspace ;97
+0
+@current_elf
+0
+@valid_num
+0
+@top_elf_1
+0
+@top_elf_2
+0
+@top_elf_3
+0
