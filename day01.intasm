@@ -1,11 +1,16 @@
 ; This is an "assembly language" for intcode. No official assembly language
 ; exists, so the "compiled" version is also provided.
+; Note that the input file must be modified in two ways:
+; 1. replace each blank line with a 0
+; 2. add two additional lines at the end of the file, each containing 0
+
+; Syntax guide:
 ;  ; is comment
 ;  @ is label (memory location of the next token)
 ;  $ is immediate mode value
 ;  (label) is the value of that label
 ; Label values were figured out with an interactive Python shell, and opcodes
-; were assembled by hand
+; were assembled by hand.
 
 @get_num ;0
 inp (workspace)
