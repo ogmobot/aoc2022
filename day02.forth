@@ -103,3 +103,6 @@ Create line-buffer buffer-len allot
 process-file . cr . cr
 
 bye
+
+\ This is far from the nicest way to write this program. Might be better to mess
+\ about a bit with modular arithmetic.
