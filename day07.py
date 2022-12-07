@@ -21,7 +21,7 @@ def show_directories(d, indent = 0):
 def get_all_sizes(d, result):
     for key, value in d.items():
         if type(value) == dict:
-            result[key].append(get_size(value)) # multiple dirs have same name!
+            result.append(get_size(value))
             get_all_sizes(value, result)
 
 with open("input07.txt") as f:
@@ -57,27 +57,21 @@ for line in lines:
             working_directory[parts[1]] = {}
 
 # part 1
-result = defaultdict(list)
-get_all_sizes(root, result)
-result["/"] = [get_size(root)]
+sizes = []
+get_all_sizes(root, sizes)
+sizes.append(get_size(root))
 
 total = 0
-for k, v in result.items():
-    for item in v:
-        if item <= 100000:
-            total += item
+for item in sizes:
+    if item <= 100000:
+        total += item
 print(total)
 
 # part 2
 TOTAL = 70000000
 REQUIRED = 30000000
-used = sum(result["/"])
+used = get_size(root)
 remaining_space = TOTAL - used
 need_to_delete = REQUIRED - remaining_space
-candidates = [item
-    for v in result.values()
-        for item in v if item >= need_to_delete]
+candidates = [item for item in sizes if item >= need_to_delete]
 print(min(candidates))
-
-# 6905 too low
-# 33223068 is too high
