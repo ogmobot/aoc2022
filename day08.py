@@ -1,4 +1,5 @@
 from functools import reduce
+from itertools import cycle
 def product(l):
     return reduce(lambda a, b: a * b, l)
 
@@ -14,42 +15,27 @@ for r, line in enumerate(lines):
         grid[(r, c)] = int(char)
 
 seen = set()
-# from left
-for r in range(height):
-    min_height = -1
-    for c in range(width):
-        if grid[(r, c)] > min_height:
-            seen.add((r, c))
-            min_height = grid[(r, c)]
-# from right
-for r in range(height):
-    min_height = -1
-    for c in range(width - 1, -1, -1):
-        if grid[(r, c)] > min_height:
-            seen.add((r, c))
-            min_height = grid[(r, c)]
-# from bottom
-for c in range(width):
-    min_height = -1
-    for r in range(height):
-        if grid[(r, c)] > min_height:
-            seen.add((r, c))
-            min_height = grid[(r, c)]
-# from right
-for c in range(width):
-    min_height = -1
-    for r in range(height - 1, -1, -1):
-        if grid[(r, c)] > min_height:
-            seen.add((r, c))
-            min_height = grid[(r, c)]
-
+for start_range, delta in [
+    (zip(range(height), cycle([0])), (0, 1)), # left edge looking right
+    (zip(range(height), cycle([width - 1])), (0, -1)), # right edge looking left
+    (zip(cycle([0]), range(width)), (1, 0)), # top row looking down
+    (zip(cycle([height - 1]), range(width)), (-1, 0)), # bottom row looking up
+]:
+    for start in start_range:
+        r, c = start
+        min_height = -1
+        while r < height and r >= 0 and c < width and c >= 0:
+            if grid[(r, c)] > min_height:
+                seen.add((r, c))
+                min_height = grid[(r, c)]
+            r, c = (r + delta[0], c + delta[1])
 print(len(seen))
 
 candidates = list(grid)
 score = 0
 for cand in candidates:
     my_height = grid[cand]
-    value = []
+    num_visible = []
     for delta in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
         num_seen = 1
         r, c = (cand[0] + delta[0], cand[1] + delta[1])
@@ -61,8 +47,8 @@ for cand in candidates:
             r, c = (r + delta[0], c + delta[1])
         else: # went off the map -- no blocking tree
             num_seen -= 1
-        value.append(max(num_seen, 0))
-    if product(value) > score:
-        score = product(value)
+        num_visible.append(max(num_seen, 0))
+    if product(num_visible) > score:
+        score = product(num_visible)
 
 print(score)
