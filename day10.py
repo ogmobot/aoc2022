@@ -1,6 +1,3 @@
-with open("input10.txt") as f:
-    lines = [l.strip() for l in f.readlines()]
-
 def generate_sigs(instructions):
     x = 1
     sigs = [1]
@@ -26,7 +23,8 @@ def drawbuff(vals):
             print(symbol, end="")
         print()
 
-sigs = generate_sigs(lines)
+with open("input10.txt") as f:
+    sigs = generate_sigs(line.strip() for line in f)
 
 print(sum(key * sigs[key] for key in range(20, len(sigs), 40)))
 
