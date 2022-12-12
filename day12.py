@@ -9,10 +9,10 @@ for r, line in enumerate(lines):
         grid[(r, c)] = char
         if char == "S":
             loc = (r, c)
-            grid[loc] = 'a'
+            grid[(r, c)] = 'a'
         elif char == "E":
             target = (r, c)
-            grid[target] = 'z'
+            grid[(r, c)] = 'z'
 
 def get_adjacent(grid, loc):
     result = []
@@ -49,3 +49,4 @@ ays = [key for key, value in grid.items() if value == 'a']
 ay_paths = [bfs(grid, a, target) for a in ays]
 ay_dists = [len(path) - 1 for path in ay_paths if path]
 print(min(ay_dists))
+# alternatively, find a path *from* the peak *to* the nearest 'a'
