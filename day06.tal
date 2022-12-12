@@ -1,0 +1,41 @@
+|10 @Console [ &vector $2 &read $1 &pad $5 &write $1 ]
+|a0 @File1 [ &vector $2 &success $2 &stat $2 &delete $1 &append $1 &name $2 &length $2 &read $2 &write $2 ]
+|0100 ( Solution for Advent of Code 2022, Day 6 )
+	( Usage: ./uxncli day06.rom input06.txt )
+
+%FILE-SIZE { #1000 }
+%EMIT { .Console/write DEO }
+%RTN { JMP2r }
+%HALT { #010f DEO }
+
+;load-file JSR2 ( load file into memory )
+@part-1
+&loop
+	;file/contents #04
+	;check-unique JSR2
+	( TODO )
+	00 ,&loop JCN
+@part-2
+&loop
+	( TODO )
+HALT
+
+@load-file
+	;file/name .File1/name DEO2 ( set file path )
+	FILE-SIZE .File1/length DEO2 ( will attempt to read 0x1000 bytes )
+	;file/contents .File1/read DEO2 ( attempt read )
+
+	.File1/success DEI2 #0000 EQU2 ;exit-early JCN2
+( &exit-early )
+RTN
+
+@check-unique ( buffer substring-length -- boolean )
+	( TODO )
+RTN
+
+@exit-early
+	HALT
+
+@file
+	&name "input06.txt 00
+	&contents $1000
