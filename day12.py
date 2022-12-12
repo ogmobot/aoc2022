@@ -3,7 +3,6 @@ with open("input12.txt") as f:
 
 loc = None
 target = None
-ays = []
 grid = {}
 for r, line in enumerate(lines):
     for c, char in enumerate(line):
@@ -14,9 +13,6 @@ for r, line in enumerate(lines):
         elif char == "E":
             target = (r, c)
             grid[target] = 'z'
-        if char == "S" or char == "a":
-            ays.append((r, c))
-
 
 def get_adjacent(grid, loc):
     result = []
@@ -27,14 +23,12 @@ def get_adjacent(grid, loc):
                 result.append(candidate)
     return result
 
-def bfs(grid, from_loc, to_loc, maxdist=999999):
+def bfs(grid, from_loc, to_loc):
     paths = [[from_loc]]
     seen = set()
     while paths:
         path = paths.pop(0)
         current_loc = path[-1]
-        if len(path) > maxdist:
-            return None # too long
         if current_loc in seen:
             continue
         seen.add(current_loc)
@@ -51,11 +45,7 @@ path = bfs(grid, loc, target)
 
 print(len(bfs(grid, loc, target))-1)
 
-print(ays)
-min_a_path = 999999
-for i, a in enumerate(ays):
-    #print(f'{i}/{len(ays)}')
-    path = bfs(grid, a, target, min_a_path)
-    if path:
-        min_a_path = len(path)
-print(min_a_path - 1)
+ays = [key for key, value in grid.items() if value == 'a']
+ay_paths = [bfs(grid, a, target) for a in ays]
+ay_dists = [len(path) - 1 for path in ay_paths if path]
+print(min(ay_dists))
