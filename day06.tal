@@ -1,24 +1,54 @@
 |10 @Console [ &vector $2 &read $1 &pad $5 &write $1 ]
 |a0 @File1 [ &vector $2 &success $2 &stat $2 &delete $1 &append $1 &name $2 &length $2 &read $2 &write $2 ]
-|0100 ( Solution for Advent of Code 2022, Day 6 )
-	( Usage: ./uxncli day06.rom input06.txt )
 
 %FILE-SIZE { #1000 }
 %EMIT { .Console/write DEO }
+%EMIT-DIGIT { LIT "0 ADD EMIT }
+	%TEN-THOUSAND { #2710 }
+	%ONE-THOUSAND { #03e8 }
+	%ONE-HUNDRED { #0064 }
+	%TEN { #000a }
+%CR { #0a EMIT }
+%BYTE>SHORT { #00 SWP }
 %RTN { JMP2r }
-%HALT { #010f DEO }
+%HALT { #010f DEO BRK }
+
+|0100 ( Solution for Advent of Code 2022, Day 6 )
+	( Usage: ./uxncli day06.rom )
 
 ;load-file JSR2 ( load file into memory )
-@part-1
-&loop
-	;file/contents #04
-	;check-unique JSR2
-	( TODO )
-	00 ,&loop JCN
-@part-2
-&loop
-	( TODO )
+#04 ;solve JSR2
+;clear-letter-counts JSR2
+#0e ;solve JSR2
 HALT
+
+@solve ( window-size -- index )
+	STH
+	;file/contents ( front of window )
+	&init-loop
+		DUP2 ;file/contents SUB2 ( get current window size )
+		STHr DUP STH BYTE>SHORT ( get target window size )
+		EQU2 ,&next JCN
+		LDAk ;inc-count JSR2
+		INC2
+	,&init-loop JMP
+	&next
+	POPr ( window size no longer needed )
+	;file/contents ( back of window )
+	&main-loop
+		;check-unique JSR2 ,&done JCN
+		LDAk ;dec-count JSR2
+		INC2
+		SWP2
+		LDAk ;inc-count JSR2
+		INC2
+		SWP2
+	,&main-loop JMP
+	&done
+	SWP2
+	;file/contents SUB2 ;print-short JSR2
+	POP2
+RTN
 
 @load-file
 	;file/name .File1/name DEO2 ( set file path )
@@ -26,16 +56,75 @@ HALT
 	;file/contents .File1/read DEO2 ( attempt read )
 
 	.File1/success DEI2 #0000 EQU2 ;exit-early JCN2
-( &exit-early )
 RTN
 
-@check-unique ( buffer substring-length -- boolean )
-	( TODO )
+@inc-count ( letter -- )
+	LIT "a SUB BYTE>SHORT
+	;letter-counts ADD2
+	LDAk INC
+	ROT ROT STA
 RTN
+
+@dec-count ( letter -- )
+	LIT "a SUB BYTE>SHORT
+	;letter-counts ADD2
+	LDAk #01 SUB
+	ROT ROT STA
+RTN
+
+@check-unique ( -- flag )
+	#01 STH ( flag initially true )
+	;letter-counts #0001 SUB2 ( since we're about to increment this )
+	&loop
+		INC2 LDAk
+
+		DUP #ff NEQ ,&next JCN ( if not #ff, go next )
+		( else )
+			POP POP2 STHr RTN
+
+		&next
+		#02 LTH ,&loop JCN ( if count < 2, continue )
+		( else )
+			POPr
+			#00 STH
+	,&loop JMP
+
+@print-short ( short -- )
+	DUP2 TEN-THOUSAND DIV2
+	DUP EMIT-DIGIT
+	TEN-THOUSAND MUL2 SUB2
+
+	DUP2 ONE-THOUSAND DIV2
+	DUP EMIT-DIGIT
+	ONE-THOUSAND MUL2 SUB2
+
+	DUP2 ONE-HUNDRED DIV2
+	DUP EMIT-DIGIT
+	ONE-HUNDRED MUL2 SUB2
+
+	DUP2 TEN DIV2
+	DUP EMIT-DIGIT
+	TEN MUL2 SUB2
+
+	EMIT-DIGIT
+	POP CR
+RTN
+
+@clear-letter-counts ( -- )
+	;letter-counts
+	&loop
+		LDAk #ff NEQ ,&setzero JCN
+			RTN
+		&setzero
+		DUP2 #00 ROT ROT STA
+		INC2
+	,&loop JMP
 
 @exit-early
 	HALT
 
+@letter-counts
+	$26 ff ( sentinel )
 @file
 	&name "input06.txt 00
 	&contents $1000
