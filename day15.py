@@ -1,6 +1,3 @@
-S_SENSOR = "s"
-S_BEACON = "b"
-
 def manhattan(a, b):
     return abs(a[0]-b[0]) + abs(a[1]-b[1])
 
@@ -20,12 +17,7 @@ for line in lines:
     beaconx = int(parts[-2][2:].strip(","))
     beacony = int(parts[-1][2:])
     radius = manhattan((xcoord, ycoord), (beaconx, beacony))
-    sensors.append({
-        "x": xcoord,
-        "y": ycoord,
-        "r": radius,
-        "beacon": (beaconx, beacony)
-    })
+    sensors.append({"x": xcoord, "y": ycoord, "r": radius})
     beacons.add((beaconx, beacony))
 
 # find interval on y=2000000 for each sensor
@@ -43,27 +35,35 @@ def get_interval(sensor, yval):
     return (sensor["x"] - halflen, sensor["x"] + halflen)
 
 def merge_intervals(intervals):
-    merged = []
-    for i in intervals:
-        for m in merged.copy():
-            if i[0] >= m[0] and i[1] <= m[1]:
-                break # new interval contained within old
-            elif m[0] >= i[0] and m[1] <= i[1]:
-                merged.remove(m)
+    did_merge = True
+    while did_merge:
+        did_merge = False
+        merged = []
+        for i in intervals:
+            for m in merged.copy():
+                if i[0] >= m[0] and i[1] <= m[1]:
+                    did_merge = True
+                    break # new interval contained within old
+                elif m[0] >= i[0] and m[1] <= i[1]:
+                    merged.remove(m)
+                    merged.append(i)
+                    did_merge = True
+                    break # old interval contained within new
+                elif i[0] <= m[0] and i[1] >= m[0]:
+                    # new interval overlaps leftmost point of old
+                    merged.remove(m)
+                    merged.append((i[0], m[1]))
+                    did_merge = True
+                    break
+                elif i[0] <= m[1] and i[1] >= m[1]:
+                    # new interval overlaps rightmost point of old
+                    merged.remove(m)
+                    merged.append((m[0], i[1]))
+                    did_merge = True
+                    break
+            else:
                 merged.append(i)
-                break # old interval contained within new
-            elif i[0] <= m[0] and i[1] >= m[0]:
-                # new interval overlaps leftmost point of old
-                merged.remove(m)
-                merged.append((i[0], m[1]))
-                break
-            elif i[0] <= m[1] and i[1] >= m[1]:
-                # new interval overlaps rightmost point of old
-                merged.remove(m)
-                merged.append((m[0], i[1]))
-                break
-        else:
-            merged.append(i)
+        intervals = merged
     return merged
 
 def outline_of(sensor):
@@ -89,17 +89,18 @@ def outline_of(sensor):
 y = 2000000
 intervals = [get_interval(s, y) for s in sensors]
 intervals = [i for i in intervals if i]
-print(intervals)
 intervals = merge_intervals(intervals)
-print(intervals)
-exit()
+total = 0
+for i in intervals:
+    total += i[1] - i[0]
+print(total)
 
 MAXVAL = 4000000
-# takes about 1 min
+# takes about 20s
 sensors.sort(key=lambda s: s.get("r"))
 for s in sensors:
-    print(f"{s['r']=}")
-    nearby = [a for a in sensors if a["r"] + s["r"] + 3 >= manhattan((s["x"], s["y"]), (a["x"], a["y"]))]
+    #print(f"{s['r']=}")
+    nearby = [a for a in sensors if a["r"] + s["r"] + 1 >= manhattan((s["x"], s["y"]), (a["x"], a["y"]))]
     for x, y in outline_of(s):
         if x >= 0 and x <= MAXVAL and y >= 0 and y <= MAXVAL:
             if not any(within_radius(a, (x, y)) for a in nearby):
