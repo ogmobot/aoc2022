@@ -42,84 +42,70 @@ def get_interval(sensor, yval):
         halflen = yval - (sensor["y"] - sensor["r"])
     return (sensor["x"] - halflen, sensor["x"] + halflen)
 
-def find_missing(intervals, maxval):
-    invisible = [ (0, maxval) ]
-    for interval_b in intervals:
-        lo_b, hi_b = interval_b
-        to_delete = []
-        new_intervals = []
-        for i, interval_w in enumerate(invisible):
-            lo_w, hi_w = interval_w
-            if ((lo_b > hi_w) or (hi_b < lo_w)):
-                # no overlap
-                pass
-            elif ((lo_b <= lo_w) and (hi_b >= hi_w)):
-                # covers
-                to_delete.append(i)
-            elif ((lo_b > lo_w) and (hi_b < hi_w)):
-                # sits inside
-                to_delete.append(i)
-                new_intervals.append((lo_w, lo_b - 1))
-                new_intervals.append((hi_b + 1, hi_w))
-            elif lo_w < lo_b:
-                # high end of radius overlaps
-                invisible[i] = (lo_w, lo_b - 1)
-            elif hi_w > hi_b:
-                # low end of radius overlaps
-                invisible[i] = (hi_b + 1, hi_w)
-        #print(invisible)
-        #print(to_delete)
-        for i in sorted(to_delete, reverse=True):
-            invisible.pop(i)
-        invisible += new_intervals
-    return invisible
+def merge_intervals(intervals):
+    merged = []
+    for i in intervals:
+        for m in merged.copy():
+            if i[0] >= m[0] and i[1] <= m[1]:
+                break # new interval contained within old
+            elif m[0] >= i[0] and m[1] <= i[1]:
+                merged.remove(m)
+                merged.append(i)
+                break # old interval contained within new
+            elif i[0] <= m[0] and i[1] >= m[0]:
+                # new interval overlaps leftmost point of old
+                merged.remove(m)
+                merged.append((i[0], m[1]))
+                break
+            elif i[0] <= m[1] and i[1] >= m[1]:
+                # new interval overlaps rightmost point of old
+                merged.remove(m)
+                merged.append((m[0], i[1]))
+                break
+        else:
+            merged.append(i)
+    return merged
 
-'''
-max_radius = max(b["r"] for b in sensors)
-x_min = min(b["x"] for b in sensors)
-x_max = max(b["x"] for b in sensors)
+def outline_of(sensor):
+    x = sensor["x"]
+    y = sensor["y"] - sensor["r"] - 1
+    while y < sensor["y"]:
+        yield (x, y)
+        x += 1
+        y += 1
+    while x > sensor["x"]:
+        yield (x, y)
+        x -= 1
+        y += 1
+    while y > sensor["y"]:
+        yield (x, y)
+        x -= 1
+        y -= 1
+    while x < sensor["x"]:
+        yield (x, y)
+        x += 1
+        y -= 1
 
-print(x_min - max_radius, x_max + max_radius)
-y=2000000
-total = 0
-for x in range(x_min - max_radius, x_max + max_radius):
-    total += 1
-    for s in sensors:
-        if within_radius(s, (x, y)) and (x, y) not in beacons:
-            break
-    else:
-        total -= 1
-print(total)
-'''
-# takes ~3 min
-
-'''
 y = 2000000
 intervals = [get_interval(s, y) for s in sensors]
-min_x = min(i[0] for i in intervals)
-max_x = min(i[1] for i in intervals)
-'''
+intervals = [i for i in intervals if i]
+print(intervals)
+intervals = merge_intervals(intervals)
+print(intervals)
+exit()
 
 MAXVAL = 4000000
-for y in range(MAXVAL + 1):
-    if y % 10000 == 0: print(f"{y=}")
-    intervals = [get_interval(s, y) for s in sensors]
-    intervals = [i for i in intervals if i]
-    xs_left = set(i[0] - 1 for i in intervals)
-    xs_right = set(i[1] + 1 for i in intervals)
-    xs_of_interest = xs_left.intersection(xs_right)
-    xs_of_interest = [x for x in xs_of_interest if x >= 0 and x <= MAXVAL]
-    visible = False
-    for x in xs_of_interest:
-        visible = False
-        for s in sensors:
-            if within_radius(s, (x, y)):
-                visible = True
+# takes about 1 min
+sensors.sort(key=lambda s: s.get("r"))
+for s in sensors:
+    print(f"{s['r']=}")
+    nearby = [a for a in sensors if a["r"] + s["r"] + 3 >= manhattan((s["x"], s["y"]), (a["x"], a["y"]))]
+    for x, y in outline_of(s):
+        if x >= 0 and x <= MAXVAL and y >= 0 and y <= MAXVAL:
+            if not any(within_radius(a, (x, y)) for a in nearby):
+                #print(x, y)
+                print((4000000 * x) + y)
                 break
-        if not visible:
-            print(x, y)
-            print((4000000 * x) + y)
-            break
     else:
         continue
     break
