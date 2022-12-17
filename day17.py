@@ -2,7 +2,7 @@ import time
 with open("input17.txt") as f:
     jets = f.read().strip()
 
-jets = ">>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>"
+#jets = ">>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>"
 
 SHAPES = [
     [
@@ -96,89 +96,45 @@ print(max(k[0] for k in grid) - min(k[0] for k in grid))
 # shapes = 5, jets = 10091
 cycle_length = len(jets) * len(SHAPES)
 
-'''
-# simulate until top is flat-ish
-r = 0
-ji = 0
-si = 0
-grid = {}
-for c in range(7):
-    grid[(0, c)] = "#"
-while True:
-    r += 1
-    if r % 10000 == 0:
-        print(r)
-    grid, ji, si = do_game(grid, jets, 1, ji, si)
-    top_row = min(k[0] for k in grid)
-    if sum((top_row, c) in grid for c in range(7)) == 7:
-        print(r) # 1361
-    #if r > 3475 and r < 3480:
-        #print()
-        #print_grid_top(grid)
-'''
-
-offset = 2
-
-num_rocks = 1000000000000 - offset
+num_rocks = 1000000000000
 total_cycles = num_rocks // cycle_length
 extra_rocks = num_rocks % cycle_length
-print(f"{total_cycles=} {extra_rocks=}")
 
 grid = {}
 for c in range(7):
     grid[(0, c)] = "#"
 jet_index = 0
 shape_index = 0
+cycle_counter = 0
+heights = {} # n_cycles: height
+last_delta = 0
+while True:
+    # do a cycle
+    grid, jet_index, shape_index = do_game(grid, jets, cycle_length, jet_index, shape_index)
+    cycle_counter += 1
+    max_row = max(k[0] for k in grid)
+    heights[cycle_counter] = max_row - min(k[0] for k in grid)
+    if cycle_counter == 1:
+        continue
+    delta = heights[cycle_counter] - heights[cycle_counter - 1]
+    print(f"{cycle_counter=} {delta=}")
+    if delta == last_delta:
+        #break
+        pass
+    last_delta = delta
+    # cull all but the top 1000 rows
+    for key in grid:
+        if key[0] != 0 and key[0] > max_row + 1000:
+            del grid[key]
 
-start_time = time.time()
-grid, jet_index, shape_index = do_game(grid, jets, offset, jet_index, shape_index)
-initial_height = max(k[0] for k in grid) - min(k[0] for k in grid)
-print(f"{initial_height=}\nt={time.time() - start_time}")
+hidden_cycles = total_cycles - cycle_counter
+hidden_height = delta * hidden_cycles
 
-# takes ~1 min in pypy
-start_time = time.time()
-grid, jet_index, shape_index = do_game(
-    grid, jets, cycle_length, jet_index, shape_index)
-height_after_1 = (max(k[0] for k in grid) - min(k[0] for k in grid))
-print(f"{height_after_1=}\nt={time.time() - start_time}")
-
-# do it once more...
-start_time = time.time()
-grid, jet_index, shape_index = do_game(
-    grid, jets, cycle_length, jet_index, shape_index)
-height_after_2 = (max(k[0] for k in grid) - min(k[0] for k in grid))
-print(f"{height_after_2=} delta={height_after_2-height_after_1}\nt={time.time() - start_time}")
-
-# do it once more...
-start_time = time.time()
-grid, jet_index, shape_index = do_game(
-    grid, jets, cycle_length, jet_index, shape_index)
-height_after_3 = (max(k[0] for k in grid) - min(k[0] for k in grid))
-print(f"{height_after_3=} delta={height_after_3-height_after_2}\nt={time.time() - start_time}")
-
-# and once more for luck...
-start_time = time.time()
-grid, jet_index, shape_index = do_game(
-    grid, jets, cycle_length, jet_index, shape_index)
-height_after_4 = (max(k[0] for k in grid) - min(k[0] for k in grid))
-print(f"{height_after_4=} delta={height_after_4-height_after_3}\nt={time.time() - start_time}")
-
-# and once more for luck...
-start_time = time.time()
-grid, jet_index, shape_index = do_game(
-    grid, jets, cycle_length, jet_index, shape_index)
-height_after_5 = (max(k[0] for k in grid) - min(k[0] for k in grid))
-print(f"{height_after_5=} delta={height_after_5-height_after_4}\nt={time.time() - start_time}")
-
-# takes ~30 s
-start_time = time.time()
 grid, _, _ = do_game(grid, jets, extra_rocks, jet_index, shape_index)
-extra_height = max(k[0] for k in grid) - min(k[0] for k in grid) - height_after_5
-print(f"{extra_height=}\n{time.time() - start_time}")
+extra_height = max(k[0] for k in grid) - min(k[0] for k in grid) - max(heights.values())
 
-delta_height = height_after_5 - height_after_4
-print(height_after_5 + (delta_height * (total_cycles - 5)) + extra_height)
-# since extra_height comes with a cycle
+print(max(heights.values()) + hidden_height + extra_height)
+
 
 #          1500862154424 is too low :(
 
@@ -187,3 +143,29 @@ print(height_after_5 + (delta_height * (total_cycles - 5)) + extra_height)
 # cycle_height is 75726? 75734?
 
 # example should give 1501020711544
+
+'''
+cycle_counter= 2 delta=75746
+cycle_counter= 3 delta=75723
+cycle_counter= 4 delta=75742
+cycle_counter= 5 delta=75714
+cycle_counter= 6 delta=75726
+cycle_counter= 7 delta=75723
+cycle_counter= 8 delta=75708
+cycle_counter= 9 delta=75745
+cycle_counter=10 delta=75729
+cycle_counter=11 delta=75732
+cycle_counter=12 delta=75715
+cycle_counter=13 delta=75731
+cycle_counter=14 delta=75735
+cycle_counter=15 delta=75706
+cycle_counter=16 delta=75748
+cycle_counter=17 delta=75713
+cycle_counter=18 delta=75728
+cycle_counter=19 delta=75722
+cycle_counter=20 delta=75722
+cycle_counter=21 delta=75736
+cycle_counter=22 delta=75729
+'''
+# this table took 12h to produce.
+# there seems to be neither rhyme nor reason...
