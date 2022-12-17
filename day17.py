@@ -92,8 +92,8 @@ def find_cycle(jets):
     grid = {}
     for c in range(7):
         grid[(0, c)] = "#"
-    grid, ji, si = do_game(grid, jets, 1500)
-    nshapes = 1500
+    grid, ji, si = do_game(grid, jets, 1234) # prime the grid
+    nshapes = 1234
     while True:
         if (ji, si) in seen:
             #print("Cycle detected:")
@@ -106,16 +106,14 @@ def find_cycle(jets):
         grid, ji, si = do_game(grid, jets, 1, ji, si)
     return (seen[(ji, si)], nshapes)
 
+# part 1
 grid = {}
 for c in range(7):
     grid[(0, c)] = "#"
 grid, _, _ = do_game(grid, jets, 2022)
 print(max(k[0] for k in grid) - min(k[0] for k in grid))
 
-# game repeats every lcm(jets, num_shapes) units
-# shapes = 5, jets = 10091
-# NO, because jet index updates more often than shape index!
-
+# part 2
 cycle_indices = find_cycle(jets)
 cycle_length = cycle_indices[1] - cycle_indices[0]
 offset = cycle_indices[0]
@@ -129,12 +127,12 @@ for c in range(7):
     grid[(0, c)] = "#"
 
 grid, ji, si = do_game(grid, jets, offset)
-initial_height = max(k[0] for k in grid) - min(k[0] for k in grid)
+initial_h = max(k[0] for k in grid) - min(k[0] for k in grid)
 
 grid, ji, si = do_game(grid, jets, cycle_length, ji, si)
-cycle_height = (max(k[0] for k in grid) - min(k[0] for k in grid)) - initial_height
+cycle_h = (max(k[0] for k in grid) - min(k[0] for k in grid)) - initial_h
 
 grid, ji, si = do_game(grid, jets, extra_rocks, ji, si)
-extra_height = (max(k[0] for k in grid) - min(k[0] for k in grid)) - cycle_height - initial_height
+extra_h = (max(k[0] for k in grid) - min(k[0] for k in grid)) - cycle_h
 
-print(initial_height + (cycle_height * total_cycles) + extra_height)
+print((cycle_h * total_cycles) + extra_h)
