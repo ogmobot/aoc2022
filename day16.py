@@ -14,33 +14,6 @@ Valve II has flow rate=0; tunnels lead to valves AA, JJ
 Valve JJ has flow rate=21; tunnel leads to valve II
 """.strip().split("\n")
 
-class Agent:
-    def __init__(self, loc, links):
-        self.loc = loc
-        self.path = []
-        self.links = links
-        self.target = None
-    def set_target(self, target):
-        p = find_path(self.links, self.loc, target)
-        if p:
-            self.path = p[1:] + [p[-1]] # turn valve
-            self.target = target
-    def step(self):
-        if self.path:
-            self.loc = self.path.pop(0)
-            if len(self.path) == 0:
-                self.target = None
-                return True # turned valve
-        return False
-    def copy(self):
-        res = Agent(self.loc, self.links)
-        res.path = self.path.copy()
-        res.target = self.target
-        return res
-
-    def __lt__(self, other):
-        return self.loc < other.loc
-
 def get_num(text):
     digits = [d for d in list(text) if d.isdigit()]
     return int("".join(digits))
@@ -95,81 +68,75 @@ def dijkstra_maximise_score(flows, links, start_node):
         heapq.heappush(paths, (-score - score_delta, (node[0], 0, node[2])))
     return best_scores
 
-def hn(node): # hash of node
-    agent_a, agent_b, time, valves, claimed = node
-    return (
-        agent_a.loc, #agent_a.target,
-        agent_b.loc, #agent_b.target,
-        time, valves,
-        claimed)
-
-#MAX_HEAP = 1000
 def dijkstra_score_two_agents(flows, links, start_node):
-    # node is (agent_a, agent_b, time, valves, claimed)
+    # node is (a_loc, a_target, b_loc, b_target, time, valves)
     best_scores = {}
-    paths = [(0, start_node)]
-    heapq.heapify(paths)
+    a_loc, b_loc, time, valves = start_node
     working_valves = [v for v in flows if flows[v] > 0]
-    working_valves.sort(key=(lambda v: flows[v]), reverse=True)
+    #working_valves.sort(key=(lambda v: flows[v]), reverse=True)
+
+    paths = []
+    heapq.heapify(paths)
+    for v_a in working_valves:
+        for v_b in working_valves:
+            if v_a == v_b: continue
+            heapq.heappush(paths, (0, (a_loc, v_a, b_loc, v_b, time, valves)))
+
     tmp = 0
     while paths:
-        #if len(paths) > MAX_HEAP:
-            #print("culling heap...")
-            #paths = [heapq.heappop(paths) for _ in range(MAX_HEAP)]
-            #heapq.heapify(paths)
         score, node = heapq.heappop(paths)
         score = -score
         if score > tmp:
-            print(score)
+            #print(score)
             tmp = score
-        agent_a, agent_b, time, valves, claimed = node
-        #if time == 25:
-            #print(f"{score=} {agent_a.loc=} {agent_b.loc=} {time=} {claimed=}")
-
-        # both agents MUST have paths to follow (if one is available)
-        done = (len(claimed) == len(working_valves))
-        if (not agent_a.path) and (not done):
-            for option in [n for n in working_valves if n not in claimed]:
-                sub_a = agent_a.copy()
-                sub_a.set_target(option)
-                heapq.heappush(paths, (-score, (
-                    sub_a, agent_b.copy(), time,
-                    valves, claimed.union([option]))))
+        a_loc, a_target, b_loc, b_target, time, valves = node
+        if time < 0:
             continue
-        if (not agent_b.path) and (not done):
-            for option in [n for n in working_valves if n not in claimed]:
-                sub_b = agent_b.copy()
-                sub_b.set_target(option)
-                heapq.heappush(paths, (-score, (
-                    agent_a.copy(), sub_b, time,
-                    valves, claimed.union([option]))))
-            continue
+        if time == 24:
+            print(score, node)
 
-        if hn(node) in best_scores:
-            if best_scores[hn(node)] >= score:
+        if node in best_scores:
+            if best_scores[node] >= score:
                 continue
-        best_scores[hn(node)] = score
+        best_scores[node] = score
 
-        # both agents are guaranteed to have paths if not all valves are open
-        score_delta = sum(flows[v] for v in valves)
-        turned_a = agent_a.step()
-        turned_b = agent_b.step()
-        if turned_a:
-            valves = valves.union([agent_a.loc])
-        if turned_b:
-            valves = valves.union([agent_b.loc])
-        if time > 0:
-            heapq.heappush(paths,
-                (-score - score_delta,
-                    (agent_a.copy(), agent_b.copy(), time - 1,
-                    valves, claimed)))
+        if a_loc == a_target:
+            # turn valve and select new target
+            valves = valves.union([a_loc])
+            a_targets = [v for v in working_valves
+                if (v != b_target and v not in valves)]
+            if not a_targets: a_targets = [""]
+        else:
+            # take a step toward target
+            if a_target != "":
+                a_path = find_path(links, a_loc, a_target)
+                a_loc = a_path[1]
+            a_targets = [a_target]
+
+        for a_t in a_targets:
+            if b_loc == b_target:
+                # turn valve and select new target
+                valves = valves.union([b_loc])
+                b_targets = [v for v in working_valves
+                    if (v != a_t and v not in valves)]
+                if not b_targets: b_targets = [""]
+            else:
+                if b_target != "":
+                    b_path = find_path(links, b_loc, b_target)
+                    b_loc = b_path[1]
+                b_targets = [b_target]
+
+            new_score = score + sum(flows[v] for v in valves)
+            for b_t in b_targets:
+                heapq.heappush(paths, (-new_score,
+                    (a_loc, a_t, b_loc, b_t, time - 1, valves)))
     return best_scores
 
 flows = {}
 links = {}
 with open("input16.txt") as f:
-    for line in f:
-    #for line in test_lines:
+    #for line in f:
+    for line in test_lines:
         words = line.strip().split()
         flows[words[1]] = get_num(words[4])
         links[words[1]] = [w.strip(",") for w in words[9:]]
@@ -181,10 +148,7 @@ print(max(res.values()))
 print()
 
 # part 2
-init_state = (
-        Agent("AA", links), Agent("AA", links), 26,
-        frozenset(), frozenset()
-)
+init_state = ("AA", "AA", 26, frozenset())
 res = dijkstra_score_two_agents(flows, links, init_state)
 print(max(res.values()))
 
