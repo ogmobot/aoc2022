@@ -1,5 +1,6 @@
 import heapq
 import itertools
+import random
 
 test_lines = """
 Valve AA has flow rate=0; tunnels lead to valves DD, II, BB
@@ -38,7 +39,7 @@ def find_path(links, from_node, to_node):
     return
 
 
-def dijkstra_maximise_score(flows, links, start_node):
+def dijkstra_maximise_score(flows, links, start_node, targets):
     # node is (loc: str, time: int, open: valveset)
     best_scores = {} # store as positive score
     paths = [(0, start_node)] # store as negative score
@@ -53,7 +54,7 @@ def dijkstra_maximise_score(flows, links, start_node):
                 #print(f"Discarding {score=} {node=}")
                 continue # discard this path
         best_scores[node] = score
-        for option in [n for n in flows if flows[n] > 0 and n not in node[2]]:
+        for option in [n for n in targets if flows[n] > 0 and n not in node[2]]:
             distance = len(find_path(links, node[0], option))
             # time to move there AND turn valve means no -1
             if distance <= node[1]:
@@ -132,24 +133,62 @@ def dijkstra_score_two_agents(flows, links, start_node):
                     (a_loc, a_t, b_loc, b_t, time - 1, valves)))
     return best_scores
 
+def try_paths(flows, links, path_a, path_b):
+    loc_a = path_a.pop(0)
+    loc_b = path_b.pop(0)
+    valves = frozenset()
+    score = 0
+    time = 26
+    while time > 0:
+        #print(f"{loc_a=} {loc_b=}")
+        #print(f"{valves=}")
+        time -= 1
+        score += sum(flows[v] for v in valves)
+        if path_a and loc_a == path_a[0]:
+            valves = valves.union([loc_a])
+            path_a.pop(0)
+        elif path_a:
+            loc_a = find_path(links, loc_a, path_a[0])[1]
+        if path_b and loc_b == path_b[0]:
+            valves = valves.union([loc_b])
+            path_b.pop(0)
+        elif path_b:
+            loc_b = find_path(links, loc_b, path_b[0])[1]
+    return score
+
+def solve_pair(flows, links, start_location):
+    working_valves = [v for v in flows if flows[v] > 0]
+    best = 0
+    for division in range((len(working_valves) // 2), 0, -1):
+        print(f"division = {division}, {len(working_valves) - division}")
+        for set_a in itertools.combinations(working_valves, division):
+            set_b = set(working_valves) - set(set_a)
+            scores_a = dijkstra_maximise_score(
+                flows, links, (start_location, 26, frozenset()), set_a)
+            scores_b = dijkstra_maximise_score(
+                flows, links, (start_location, 26, frozenset()), set_b)
+            if max(scores_a.values()) + max(scores_b.values()) > best:
+                best = max(scores_a.values()) + max(scores_b.values())
+                print(set_a, set_b)
+                print(best)
+    return best
+
 flows = {}
 links = {}
 with open("input16.txt") as f:
-    #for line in f:
-    for line in test_lines:
+    for line in f:
+    #for line in test_lines:
         words = line.strip().split()
         flows[words[1]] = get_num(words[4])
         links[words[1]] = [w.strip(",") for w in words[9:]]
 
+working_valves = [v for v in flows if flows[v] > 0]
 # part 1
 init_state = ("AA", 30, frozenset())
-res = dijkstra_maximise_score(flows, links, init_state)
+res = dijkstra_maximise_score(flows, links, init_state, list(flows.keys()))
 print(max(res.values()))
 print()
 
 # part 2
-init_state = ("AA", "AA", 26, frozenset())
-res = dijkstra_score_two_agents(flows, links, init_state)
-print(max(res.values()))
+print(solve_pair(flows, links, "AA"))
 
-# 2058 is too low
