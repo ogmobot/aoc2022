@@ -58,10 +58,18 @@ Day 06: uxntal
 --------------
 For this language, I took a break from Vim and instead wrote the program in Left, a text editor written in uxntal. Uxntal is the assembly language for the `uxn` fantasy cpu dreamt up by Devine Lu Linvega of 100 Rabbits. They've also developed Drifblim (an assembler), Uxnlin (a linter) and Beetbug (a debugger) in this language, although I didn't use them for this program.
 
-Devine's aim (as I understand it) is to create a technology stack that uses a simple, well-defined VM to avoid the problems that 100 Rabbits had while attempting to develop iOS software -- namely high energy consumption, the constant updates and upgrades necessary to continue development, and old programs becoming unusable due to those updates. They seem to have largely achieved that goal, as many common computer applications (text processing, drawing, sprite- or hex-editing, filesystems, calculator) now exist within the Varvara ecosystem.
+100 Rabbits' aim (as I understand it) is to create a technology stack that uses a simple, well-defined VM to avoid the problems that the studio had while attempting to develop iOS software -- namely high energy consumption, the constant mandatory updates, and old programs becoming unusable due to those updates. They seem to have largely achieved that goal, as many common computer applications (text processing, drawing, sprite- or hex-editing, filesystems, calculator, rudimentary OS) now exist within the Varvara ecosystem.
 
 Uxntal feels like a cross between assembly and Forth. I kept trying to give arguments to my functions by writing them after the function's name (`JMP ,&next`), but that's not how Forths work. Weird language. I like it.
 
 **Uxntal**: a language for the systems of post-collapse Earth.
 
-**Syntax Highlight**: `LDA2kr` (`2`, `k` and `r` can be used to modify the meaning of a word: Load (2 bytes) (without popping from the stack) (using the return stack in place of the working stack))
+**Syntax Highlight**: `LDA2kr` (`2`, `k` and `r` can be used to modify the meaning of a word: Load (**2** bytes) (**k**eeping the argument on the stack) (using **r**eturn stack, not working stack)
+
+Day 07: JavaScript
+------------------
+This was a pretty straightforward translation of my Python solution, although a few bits were tidied up. I think I prefer the relative safety of TypeScript (although if you ignore the static type-checking, the languages are just about identical). Notable differences from Python are the C-like ternary operator and the anonymous function syntax.
+
+**JavaScript**: not just for web pages.
+
+**Syntax Highlight**: `x => f(x)` (anonymous functions are very comfy)
