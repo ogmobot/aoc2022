@@ -1,5 +1,6 @@
 import heapq
 import time
+from functools import reduce
 START = time.time()
 
 test_lines = [
@@ -206,9 +207,19 @@ with open("input19.txt") as f:
 #print(best_possible(blueprints[0], 24))
 #print(best_possible(blueprints[1], 24))
 
-results = []
-for index, bp in enumerate(blueprints):
-    results.append(find_quality_level(index, bp))
-print(sum(results))
+# takes ~25 min (use pypy)
+#results = []
+#for index, bp in enumerate(blueprints):
+    #results.append(find_quality_level(index, bp))
+#print(sum(results))
 
-# 1520 is too low
+# takes ~15 min
+results = []
+for bp in blueprints[:3]:
+    results.append(best_possible(bp, 32))
+print(reduce((lambda a, b: a * b), results))
+
+# possible optimisation:
+#   at each state, branch to "earliest point that robot X could be built,
+#                               given current resources"
+#                   for each possible X
