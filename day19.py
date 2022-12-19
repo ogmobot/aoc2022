@@ -19,50 +19,72 @@ def predicted_score(state):
         0* ((-state["elapsed"] * state["ore robot"]) + state["ore"]),
     ])
 
-def find_options(blueprint, resources):
-    # result has tuples of (consume, produce)
-    result = [({}, {"elapsed": 1})] # consume nothing, produce nothing
+def find_options(blueprint, state):
+    # result is a list of new states
+    default_state = state.copy()
+    default_state["elapsed"] += 1
+    result = [do_production(default_state)]
     max_ore_robots = max(
         reqs.get("ore", 0) for reqs in blueprint.values())
     max_clay_robots = max(
         reqs.get("clay", 0) for reqs in blueprint.values())
     max_obsidian_robots = max(
         reqs.get("obsidian", 0) for reqs in blueprint.values())
+    can_make = []
     for product, reqs in blueprint.items():
         if (product == "ore robot"
-                and resources["ore robot"] >= max_ore_robots):
+                and state["ore robot"] >= max_ore_robots):
             continue
         if (product == "clay robot"
-                and resources["clay robot"] >= max_clay_robots):
+                and state["clay robot"] >= max_clay_robots):
             continue
         if (product == "obsidian robot"
-                and resources["obsidian robot"] >= max_obsidian_robots):
+                and state["obsidian robot"] >= max_obsidian_robots):
             continue
-        # assume making geode robots is always the best choice
-        if all(resources[req_type] >= req_amount
+        if all(state[req_type] >= req_amount
                     for req_type, req_amount in reqs.items()):
-            if product == "geode robot":
-                return [(reqs, {product: 1, "elapsed": 1})]
-            result.append((reqs, {product: 1, "elapsed": 1}))
+            can_make.append(product)
+    #print(can_make)
+    # assume making geode robots is always the best choice
+    if "geode robot" in can_make:
+        default_state = do_production(default_state)
+        for req_type, req_amount in blueprint["geode robot"].items():
+            default_state[req_type] -= req_amount
+        default_state["geode robot"] += 1
+        return [default_state]
+    # assume we should make obsidian robots if we can't make geode robots
+    elif "obsidian robot" in can_make:
+        default_state = do_production(default_state)
+        for req_type, req_amount in blueprint["obsidian robot"].items():
+            default_state[req_type] -= req_amount
+        default_state["obsidian robot"] += 1
+        return [default_state]
+    else:
+        for opt in can_make:
+            new_state = do_production(default_state)
+            for req_type, req_amount in blueprint[opt].items():
+                new_state[req_type] -= req_amount
+            new_state[opt] += 1
+            result.append(new_state)
     return result
 
 def heap_node(state):
     return GeodeDict({k:v for k, v in state.items()})
     #return (-state["geode"], state)
 
-def apply_option(state, option):
+#def apply_option(state, option):
     #print(f"applying {option} to {state=}")
-    new_state = state.copy()
-    consumed, produced = option
-    for item, amount in consumed.items():
-        new_state[item] -= amount
-    for item, amount in produced.items():
-        new_state[item] += amount
+    #new_state = state.copy()
+    #consumed, produced = option
+    #for item, amount in consumed.items():
+        #new_state[item] -= amount
+    #for item, amount in produced.items():
+        #new_state[item] += amount
     #print(f"{new_state=}")
-    return new_state
+    #return new_state
 
 def do_production(init_state):
-    state = {k:v for k, v in init_state.items()}
+    state = init_state.copy()
     for producer in ["ore robot", "clay robot", "obsidian robot", "geode robot"]:
         product = producer.split()[0]
         state[product] = state[product] + state[producer]
@@ -104,7 +126,7 @@ def best_possible(blueprint, time_limit):
     heapq.heappush(search_nodes, heap_node(init_state))
     counter = 0
     best_times = {} # {(state): time}
-    geode_robot_benchmarks = {} # {time: geode robots}
+    #geode_robot_benchmarks = {} # {time: geode robots}
     best_geodes = 0
     while search_nodes:
         state = heapq.heappop(search_nodes)
@@ -122,14 +144,14 @@ def best_possible(blueprint, time_limit):
             heapq.heapify(search_nodes)
 
         #print(signature(state))
-        if signature(state) in best_times:
-            if best_times[signature(state)] < state["elapsed"]:
-                continue
+        #if signature(state) in best_times:
+            #if best_times[signature(state)] < state["elapsed"]:
+                #continue
 
-        if state["elapsed"] in geode_robot_benchmarks:
-            if state["geode robot"] < geode_robot_benchmarks[state["elapsed"]]:
-                continue
-        geode_robot_benchmarks[state["elapsed"]] = state["geode robot"]
+        #if state["elapsed"] in geode_robot_benchmarks:
+            #if state["geode robot"] < geode_robot_benchmarks[state["elapsed"]]:
+                #continue
+        #geode_robot_benchmarks[state["elapsed"]] = state["geode robot"]
 
         if state["elapsed"] == time_limit:
             if state["geode"] > best_geodes:
@@ -146,12 +168,11 @@ def best_possible(blueprint, time_limit):
                 continue
 
         best_times[signature(state)] = state["elapsed"]
-        new_state = do_production(state)
         for option in find_options(blueprint, state):
-            next_state = apply_option(new_state, option)
+            #print(option)
             heapq.heappush(
                 search_nodes,
-                heap_node(next_state))
+                heap_node(option))
     #final_states = [
         #sig2state(sig)
         #for sig, time in best_times.items()
@@ -185,7 +206,6 @@ with open("input19.txt") as f:
 #print(best_possible(blueprints[0], 24))
 #print(best_possible(blueprints[1], 24))
 
-# takes ~3h and gets the wrong answer
 results = []
 for index, bp in enumerate(blueprints):
     results.append(find_quality_level(index, bp))
