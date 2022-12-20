@@ -15,9 +15,8 @@ def mix(nums, num_order):
     return
 
 def grove_sum(nums):
-    zero = [z for z in nums if z.n == 0][0]
-    zero_index = nums.index(zero)
-    grove = [nums[(zero_index + i) % len(nums)].n for i in (1000, 2000, 3000)]
+    zero_index = [index for index, num in enumerate(nums) if num.n == 0].pop()
+    grove = [nums[(zero_index + x) % len(nums)].n for x in (1000, 2000, 3000)]
     return sum(grove)
 
 with open("input20.txt") as f:
