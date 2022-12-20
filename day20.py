@@ -4,9 +4,6 @@ class Num:
     def __repr__(self):
         return repr(self.n)
 
-with open("input20.txt") as f:
-    nums_orig = [Num(l.strip()) for l in f]
-
 def mix(nums, num_order):
     for num_i in num_order:
         orig_index = nums.index(num_i)
@@ -17,16 +14,19 @@ def mix(nums, num_order):
         nums.insert(new_index, num_i)
     return
 
-def groove_sum(nums):
+def grove_sum(nums):
     zero = [z for z in nums if z.n == 0][0]
     zero_index = nums.index(zero)
-    groove = [nums[(zero_index + i) % len(nums)].n for i in (1000, 2000, 3000)]
-    return sum(groove)
+    grove = [nums[(zero_index + i) % len(nums)].n for i in (1000, 2000, 3000)]
+    return sum(grove)
+
+with open("input20.txt") as f:
+    nums_orig = [Num(l.strip()) for l in f]
 
 # part 1
 nums = nums_orig.copy()
 mix(nums, nums.copy())
-print(groove_sum(nums))
+print(grove_sum(nums))
 
 # part 2
 KEY = 811589153
@@ -34,4 +34,4 @@ nums = [Num(KEY*x.n) for x in nums_orig]
 num_order = nums.copy()
 for _ in range(10):
     mix(nums, num_order)
-print(groove_sum(nums))
+print(grove_sum(nums))
