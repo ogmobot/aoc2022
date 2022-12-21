@@ -72,4 +72,3 @@ fs.readFile("input07.txt", "utf8", (err, data) => {
     console.log(sizes.filter(x => x >= need_to_delete)
                      .reduce((x, y) => x < y ? x : y));
 });
-
