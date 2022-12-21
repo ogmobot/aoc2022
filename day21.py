@@ -14,8 +14,6 @@ class Monkey:
 
     def eval(self):
         if self.is_atom:
-            if self.symbolic:
-                return "x"
             return self.value
         else:
             a = self.monkeys[self.a].eval()
@@ -32,20 +30,17 @@ def do_op(op, a, b):
         case "*", int(), int(): return a * b
         case "/", int(), int(): return a // b
         case "=", int(), int(): return a == b
-        case "=", int(), _:     return unwrap(a, b)
-        case "=", _,     int(): return unwrap(b, a)
-        case _,   int(), int(): raise ValueError(f"invalid op: '{op}'")
-        case _,   _,     _:     return [op, a, b]
+        case "=", int(), _____: return unwrap(a, b)
+        case "=", _____, int(): return unwrap(b, a)
+        case ___, int(), int(): raise ValueError(f"invalid op: '{op}'")
+        case ___, _____, _____: return [op, a, b]
 
 def do_reverse(op, result, b):
-    if op == "+":
-        return result - b
-    elif op == "-":
-        return result + b
-    elif op == "*":
-        return result // b
-    elif op == "/":
-        return result * b
+    match op:
+        case "+": return int(result - b)
+        case "-": return int(result + b)
+        case "*": return int(result // b)
+        case "/": return int(result * b)
 
 def unwrap(integer, expression):
     while type(expression) == list:
@@ -55,13 +50,15 @@ def unwrap(integer, expression):
         if op == "-" and type(a) == int:
             a, b = b, a
             integer = -integer
+        elif op == "/" and type(a) == int:
+            a, b = b, a
+            integer = 1/integer # doesn't come up in actual input, thankfully
         if type(a) == int and type(b) != int:
             integer = do_reverse(op, integer, a)
             expression = b
         elif type(b) == int and type(a) != int:
             integer = do_reverse(op, integer, b)
             expression = a
-    assert type(expression) == str, "Couldn't unwrap properly!"
     return integer
 
 with open("input21.txt") as f:
@@ -75,5 +72,5 @@ for line in lines:
 print(monkeys["root"].eval())
 
 monkeys["root"].op = "="
-monkeys["humn"].symbolic = True
+monkeys["humn"].value = "x" # any non-int, non-list will do
 print(monkeys["root"].eval())
