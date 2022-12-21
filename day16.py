@@ -1,6 +1,5 @@
 import heapq
 import itertools
-import random
 
 test_lines = """
 Valve AA has flow rate=0; tunnels lead to valves DD, II, BB
@@ -101,6 +100,6 @@ res = dijkstra_maximise_score(flows, links, init_state, list(flows.keys()))
 print(max(res.values()))
 print()
 
-# part 2 (takes ~15 min)
+# part 2 (takes ~15 min, or ~9 min with pypy)
 print(solve_pair(flows, links, "AA"))
 
