@@ -1,4 +1,3 @@
-import heapq
 from math import gcd
 
 def manhattan(a, b):
@@ -40,51 +39,36 @@ def blizzard_at(bcache, t, r, c):
     #blizzards = bcache[t]
     #return any(b[0] == r and b[1] == c for b in blizzards)
 
-def dfs(grid, bcache, start_coord, finish_coord, b_period):
+def bfs(grid, bcache, start_coord, checkpoints, b_period):
     timer = 0
-    time_limit = 300
-    paths = [(
-        manhattan(start_coord, finish_coord),
-        0,
-        start_coord
-    )] # distance, time, location
-    heapq.heapify(paths)
-    seen = {}
+    time_limit = 300 # must be >= solution
+    paths = [(0,) + start_coord]
+    seen = set()
     #max_t = 0
     while paths:
         timer += 1
         if timer % 1000000 == 0:
             print(f"{timer=} {len(paths)=} {time_limit=}")
-        _, t, location = heapq.heappop(paths)
-        if t + manhattan(location, finish_coord) >= time_limit:
+            print(f"{paths[-1]=}")
+        t, r, c = paths.pop(0)
+        if (t, r, c) in seen:
             continue
-        #if t > max_t:
-            #print(f"{t=} nodes={len(paths)}")
-            #max_t = t
-        #print(t, location)
-        r, c = location
-        if location == finish_coord:
-            time_limit = t
-            continue
+        seen.add((t, r, c))
+        if (r, c) == checkpoints[0]:
+            checkpoints = checkpoints[1:]
+            if len(checkpoints) == 0:
+                return t
+            paths = []
         adjacents = [(r + dr, c + dc) for dr, dc in [
-            (0, 1), (0, -1), (1, 0), (-1, 0), (0, 0)
+            (0, 0), (-1, 0), (0, -1), (1, 0), (0, 1),
         ]]
         adjacents = [(ar, ac) for ar, ac in adjacents if (
             (not blizzard_at(bcache, (t + 1) % b_period, ar, ac)) and
             (grid.get((ar, ac), "#") == ".")
         )]
         for new_loc in adjacents:
-            heapq.heappush(paths,(manhattan(new_loc, finish_coord) - t, t + 1, new_loc))
-            #heapq.heappush(paths,(t + 1, new_loc))
-        #if len(paths) > HEAP_CULL_AT:
-            #print(f"Heap exceeded {HEAP_CULL_AT} elements. Culling...", end="", flush=True)
-            #new_paths = []
-            #heapq.heapify(new_paths)
-            #for _ in range(HEAP_CULL_TO):
-                #heapq.heappush(new_paths, heapq.heappop(paths))
-            #paths = new_paths
-            #print(" Done.")
-    return time_limit
+            paths.append((t + 1,) + new_loc)
+    return None
 
 with open("input24.txt") as f:
     lines = [l.strip() for l in f]
@@ -112,10 +96,17 @@ for r, line in enumerate(lines):
 blizzard_period = lcm(len(lines) - 2, len(lines[0]) - 2)
 bcache = cache_blizzards(grid, blizzards, blizzard_period)
 
-print(dfs(
+start_point = (0, 1)
+end_point = (len(lines) - 1, len(lines[0]) - 2)
+
+print(bfs(
     grid,
     bcache,
-    (0, 1), (len(lines) - 1, len(lines[0]) - 2),
+    start_point, [end_point],
     blizzard_period))
 
-# 286 is too high
+print(bfs(
+    grid,
+    bcache,
+    start_point, [end_point, start_point, end_point],
+    blizzard_period))
