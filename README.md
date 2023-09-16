@@ -73,3 +73,13 @@ This was a pretty straightforward translation of my Python solution, although a 
 **JavaScript**: not just for web pages.
 
 **Syntax Highlight**: `x => f(x)` (anonymous functions are very comfy)
+
+Day 08: Chapel
+--------------
+After a long break, I've decided to use the Chapel language for this task. Most of the syntax seems fairly straightforward, but the syntax for designating the intent of a set of parallel tasks (for example, in Part 2 of this solution) was not something I've seen before.
+
+I had a lot of difficulty trying to put together the Chapel compiler. Eventually I gave up and used an online implementation. Unfortunately, this means I wasn't able to test reading from files other than standard input.
+
+**Chapel**: run everything in parallel (if you can run it at all)
+
+**Syntax Highlight**: `coforall` (just like `for`, but spawns a separate thread for each loop iteration)
