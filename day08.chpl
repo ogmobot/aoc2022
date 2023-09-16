@@ -49,15 +49,13 @@ proc main() : void {
     }
   }
   // part 1
-  var numVisible: atomic int = 0;
-  forall coord in grid.keysToArray() do {
-    if testVisible(grid, coord) {
-      numVisible.add(1);
-    }
+  var numVisible = 0;
+  forall coord in grid.keysToArray() with (+ reduce numVisible) {
+    numVisible reduce= testVisible(grid, coord);
   }
   writeln(numVisible);
   // part 2
-  var bestScore: int = 0;
+  var bestScore = 0;
   forall coord in grid.keysToArray() with (max reduce bestScore) {
     bestScore reduce= admireTheView(grid, coord);
   }
