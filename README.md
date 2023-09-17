@@ -88,6 +88,8 @@ Day 09: [Noulith](https://github.com/betaveros/noulith)
 -------------------------------------------------------
 Noulith is still in active-ish development, so for reference's sake, this is the language as it existed in mid-September 2023. Its creator, betaveros (Brian Chen), had in mind a language for "quick-and-dirty scripts" and it seems to fit that kind of program pretty well. The language passes all function arguments by value, which I think is a good idea. In a sense, though, that makes it a poor fit for the method I used to solve this problem (i.e. dumping thousands of coordinate pairs into a hash table). Values can still be passed by reference, in a sense, by first setting up a closure.
 
+My solution for this program uses LISP-style linked lists and functions. I could have set up an ordinary list instead (as I did in the Python version of this solution), but the immutability of Noulith made this seem like a neater solution. I suppose I could have solved it with a single monolithic function, since data structures can be mutated within a single scope, but I find smaller functions easier to deal with.
+
 The relatively slow speed of the language definitely feels like it was set up to write little scripts, rather than tracking the locations of ten moving objects across thousands of steps. Still, better to use Noulith for this task rather than an even more computationally-intensive one.
 
 **Noulith**: a neat little language for neat little tasks.
