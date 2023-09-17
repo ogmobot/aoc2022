@@ -1,6 +1,6 @@
 cons := \ a, b -> [a, b];
-car := \ l -> l[0];
-cdr := \ l -> l[1];
+car  := \ l    -> l[0];
+cdr  := \ l    -> l[1];
 
 # Functions can't usually modify variables outside their own scope, but this
 # approach allows a dictionary to be passed "by reference" via a closure.
@@ -11,39 +11,38 @@ make_track := \ -> (
 maxdist := \ a, b -> max(abs(a[0] - b[0]), abs(a[1] - b[1]));
 
 update_single := \ h, t ->
-    [(
+    [
         switch(h[0] - t[0])
-        case _ > 0 -> (t[0] + 1)
-        case _ < 0 -> (t[0] - 1)
-        case _ -> (t[0])
-    ),(
+            case _ > 0 -> (t[0] + 1)
+            case _ < 0 -> (t[0] - 1)
+            case _     -> (t[0])
+    ,
         switch(h[1] - t[1])
-        case _ > 0 -> (t[1] + 1)
-        case _ < 0 -> (t[1] - 1)
-        case _ -> (t[1])
-    )];
+            case _ > 0 -> (t[1] + 1)
+            case _ < 0 -> (t[1] - 1)
+            case _     -> (t[1])
+    ];
 
 update_tail := \ snake, track -> (
     # Given a snake of the form H | T,
     # returns H | T'.
-    if (cdr(snake) == []) (
-        track(car(snake));
+    if (snake.cdr == [])
+        snake.car.track
+    ;
+    if (snake.cdr == [] or maxdist(snake.car, snake.cdr.car) <= 1)
         snake
-    ) else (
-        if (maxdist(car(snake), car(cdr(snake))) <= 1) (
-            snake
-        ) else (
-            cons(car(snake),
-                update_tail(
-                    cons(
-                        update_single(car(snake), car(cdr(snake))),
-                        cdr(cdr(snake))),
-                    track)))));
+    else
+        cons(
+            snake.car,
+            update_tail(
+                cons(
+                    update_single(snake.car, snake.cdr.car),
+                    snake.cdr.cdr),
+                track)));
 
 update_head := \ snake, direction, track -> (
     # direction is one of "U", "D", "L", "R"
-    head_x := car(snake)[0];
-    head_y := car(snake)[1];
+    head_x, head_y := snake.car;
     switch (direction)
         case "U" -> (head_y = head_y - 1)
         case "D" -> (head_y = head_y + 1)
@@ -53,41 +52,41 @@ update_head := \ snake, direction, track -> (
     update_tail(
         cons(
             [head_x, head_y],
-            cdr(snake)),
+            snake.cdr),
         track));
 
 do_command := \ snake, command, track -> (
-    direction, count := split(command, " ");
-    for (x <- 1 to int(count))
-        snake = update_head(snake, direction, track)
+    direction, count := command split " ";
+    for (x <- 1 to count.int)
+        snake = update_head! snake, direction, track
     ;
     snake);
 
-new_snake := \ x -> (
+new_snake := \ x ->
     if (x == 0)
         []
     else
-        cons([0, 0], new_snake(x - 1)));
+        cons([0, 0], new_snake(x - 1));
 
 main := \ -> (
-    input_lines := split(read_file("input09.txt"), "\n");
+    input_lines := "input09.txt".read_file split "\n";
     # Part 1
-    snake := new_snake(2);
+    snake := new_snake 2;
     get_track, track := make_track();
     track([0, 0]);
-    for (l <- input_lines) (
-        if (len(l) > 1)
-            snake = do_command(snake, l, track)
-    );
-    print(len(get_track()));
+    for (l <- input_lines)
+        if (l.len > 1)
+            snake = do_command! snake, l, track
+    ;
+    get_track().len.print;
     # Part 2
-    snake = new_snake(10);
+    snake = new_snake 10;
     get_track, track = make_track();
     track([0, 0]);
-    for (l <- input_lines) (
-        if (len(l) > 1)
-            snake = do_command(snake, l, track)
-    );
-    print(len(get_track())));
+    for (l <- input_lines)
+        if (l.len > 1)
+            snake = do_command! snake, l, track
+    ;
+    get_track().len.print);
 
 main()
