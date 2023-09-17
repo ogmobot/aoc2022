@@ -54,8 +54,8 @@ Besides The Capital Letters, It Feels Almost Indistinguishable From Java.
 
 **Syntax Highlight**: `using` (Many Important Functions, Like Printing To Stdout, Are Imported From Modules, Just Like C/C++/Java/Go/Etc.)
 
-Day 06: uxntal
---------------
+Day 06: [uxntal](https://git.sr.ht/~rabbits/uxn)
+------------------------------------------------
 For this language, I took a break from Vim and instead wrote the program in Left, a text editor written in uxntal. Uxntal is the assembly language for the `uxn` fantasy cpu dreamt up by Devine Lu Linvega of 100 Rabbits. They've also developed Drifblim (an assembler), Uxnlin (a linter) and Beetbug (a debugger) in this language, although I didn't use them for this program.
 
 100 Rabbits' aim (as I understand it) is to create a technology stack that uses a simple, well-defined VM to avoid the problems that the studio had while attempting to develop iOS software -- namely high energy consumption, the constant mandatory updates, and old programs becoming unusable due to those updates. They seem to have largely achieved that goal, as many common computer applications (text processing, drawing, sprite- or hex-editing, filesystems, calculator, rudimentary OS) now exist within the Varvara ecosystem.
@@ -64,7 +64,7 @@ Uxntal feels like a cross between assembly and Forth. I kept trying to give argu
 
 **Uxntal**: a language for the systems of post-collapse Earth.
 
-**Syntax Highlight**: `LDA2kr` (`2`, `k` and `r` can be used to modify the meaning of a word: Load (**2** bytes) (**k**eeping the argument on the stack) (using **r**eturn stack, not working stack)
+**Syntax Highlight**: `LDA2kr` (`2`, `k` and `r` can be used to modify the meaning of a word: Load (**2** bytes) (**k**eeping the argument on the stack) (using **r**eturn stack, not working stack))
 
 Day 07: JavaScript
 ------------------
@@ -80,6 +80,16 @@ After a long break, I've decided to use the Chapel language for this task. Most 
 
 I had a lot of difficulty trying to put together the Chapel compiler. Eventually I gave up and used an online implementation. Unfortunately, this means I wasn't able to test reading from files other than standard input.
 
-**Chapel**: run everything in parallel (if you can run it at all)
+**Chapel**: run everything in parallel (if you can run it at all).
 
 **Syntax Highlight**: `coforall` (just like `for`, but spawns a separate thread for each loop iteration)
+
+Day 09: [Noulith](https://github.com/betaveros/noulith)
+-------------------------------------------------------
+Noulith is still in active-ish development, so for reference's sake, this is the language as it existed in mid-September 2023. Its creator, betaveros (Brian Chen), had in mind a language for "quick-and-dirty scripts" and it seems to fit that kind of program pretty well. The language passes all function arguments by value, which I think is a good idea. In a sense, though, that makes it a poor fit for the method I used to solve this problem (i.e. dumping thousands of coordinate pairs into a hash table). Values can still be passed by reference, in a sense, by first setting up a closure.
+
+The relatively slow speed of the language definitely feels like it was set up to write little scripts, rather than tracking the locations of ten moving objects across thousands of steps. Still, better to use Noulith for this task rather than an even more computationally-intensive one.
+
+**Noulith**: a neat little language for neat little tasks.
+
+**Syntax Highlight**: `f := \\ x -> ...` (like in Scala, functions are defined by assigning an anonymous function to a variable; and like in Haskell, anonymous functions are defined with \\)
