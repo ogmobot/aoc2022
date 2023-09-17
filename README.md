@@ -94,4 +94,4 @@ The relatively slow speed of the language definitely feels like it was set up to
 
 **Noulith**: a neat little language for neat little tasks.
 
-**Syntax Highlight**: `f := \\ x -> ...` (like in Scala, functions are defined by assigning an anonymous function to a variable; and like in Haskell, anonymous functions are defined with \\)
+**Syntax Highlight**: `f := \ x -> ...` (like in Scala, functions are defined by assigning an anonymous function to a variable; and like in Haskell, anonymous functions are defined with \\)
