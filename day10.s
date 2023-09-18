@@ -6,21 +6,24 @@
 ;           -R 8000 -X    0 \ # reset and exit vectors
 ;           -G FFE0 -P FFEE   # getchar and putchar locations
 
-charcount = &10
-intbuffer = &30
-putchar   = &FFEE
-getchar   = &FFE0
+charcount   = &10
+tempx       = &20
+intbuffer   = &30
+sumbuffer   = &40
+digitbuffer = &50
+putchar     = &FFEE
+getchar     = &FFE0
 
     ORG &8000
 
 .start
-    LDA #00
-    TAY     ; cycle count
+    LDA #0
     TAX     ; sprite index (addx changes this)
+    LDA #1
     STA charcount
 .mainloop
-    LDA #108
-    JSR putchar
+    ;LDA #108
+    ;JSR putchar
     JSR getchar
 ; test for eof or empty line
     CMP #255
@@ -36,8 +39,8 @@ getchar   = &FFE0
 ; unrecognised value!
     JSR crash
 .gotn
-    LDA #110
-    JSR putchar
+    ;LDA #110
+    ;JSR putchar
 
     JSR getchar ; o
     JSR getchar ; o
@@ -48,8 +51,8 @@ getchar   = &FFE0
     LDA #0
     BEQ mainloop
 .gota
-    LDA #97
-    JSR putchar
+    ;LDA #97
+    ;JSR putchar
 
     JSR getchar ; d
     JSR getchar ; d
@@ -59,9 +62,9 @@ getchar   = &FFE0
     JSR docycle
     JSR docycle
 
-    STX &20
+    STX tempx
     JSR getint
-    ADC &20
+    ADC tempx
     TAX
     LDA #0
     BEQ mainloop
@@ -70,8 +73,9 @@ getchar   = &FFE0
 
 .getint
     LDA #0
-    STA &40
+    STA sumbuffer
     TAX
+    INX
 .getintloop
     JSR getchar
     CMP #10
@@ -83,35 +87,38 @@ getchar   = &FFE0
     DEX
     BEQ getintreturn
     LDA intbuffer,X
-    CMP #45
+    CMP #45 ; -
     BEQ getintminus
-    SBC #30
-    STA &50
+    SBC #48 ; 0
+    STA digitbuffer
+    CLC
     ; multiply by ten, lol
-    LDA &40
-    ADC &40
-    ADC &40
-    ADC &40
-    ADC &40
-    ADC &40
-    ADC &40
-    ADC &40
-    ADC &40
-    ADC &40
+    LDA sumbuffer
+    ADC sumbuffer
+    ADC sumbuffer
+    ADC sumbuffer
+    ADC sumbuffer
+    ADC sumbuffer
+    ADC sumbuffer
+    ADC sumbuffer
+    ADC sumbuffer
+    ADC sumbuffer
 
-    ADC &50
-    STA &40
-    BNE getintnext
+    ADC digitbuffer
+    STA sumbuffer
+    LDA #0
+    BEQ getintnext
 .getintminus
+    LDA sumbuffer
     EOR #255
     CLC
     ADC #1
+    STA sumbuffer
 .getintreturn
+    LDA sumbuffer
     RTS
 
 .docycle
-    LDA #68
-    JSR putchar
     TXA
     CMP charcount
     BEQ cycletrue
@@ -121,22 +128,22 @@ getchar   = &FFE0
     ADC #1
     CMP charcount
     BEQ cycletrue
-    BNE cyclefalse
-.cycletrue
-    LDA #64
+    LDA #46 ; .
     BNE cycleskip
-.cyclefalse
-    LDA #46
+.cycletrue
+    LDA #64 ; @
 .cycleskip
+    TXA
+    ADC #48
     JSR putchar
 
     LDA charcount
     ADC #1
-    CMP #40
+    CMP #41
     BNE cyclenonewline
     LDA #10
     JSR putchar
-    LDA #0
+    LDA #1
 .cyclenonewline
     STA charcount
     RTS
