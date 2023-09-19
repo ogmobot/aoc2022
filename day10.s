@@ -14,8 +14,6 @@ digitbuffer = &41
 tensflag    = &42
 xvector     = &50
 cvector     = &60
-prodlo      = &50
-prodhi      = &60
 vecsumlo    = &70
 vecsumhi    = &71
 putchar     = &FFEE
@@ -26,20 +24,20 @@ getchar     = &FFE0
 .start
     CLD
     LDX #1  ; sprite index (addx changes this)
-    LDY #0  ; vector index (increment every 40 cycles)
+    LDY #1  ; vector index (increment every 40 cycles)
     ; set up cycle vector for later multiplication
     LDA #20
-    STA &60
-    LDA #60
     STA &61
-    LDA #100
+    LDA #60
     STA &62
-    LDA #140
+    LDA #100
     STA &63
-    LDA #180
+    LDA #140
     STA &64
-    LDA #220
+    LDA #180
     STA &65
+    LDA #220
+    STA &66
 
     LDA #0
     STA charcount
@@ -93,7 +91,7 @@ getchar     = &FFE0
 .p2done
     JSR vectormultiply
     JSR printshort
-    JMP final
+    BRK
 
 .getint
     LDA #0
@@ -194,7 +192,7 @@ getchar     = &FFE0
     ; I am indebted to Leif Stensson and Niels Moeller for
     ; this multiplication routine.
     ; www.lysator.liu.se/~nisse/
-    LDX #5
+    LDX #6
 .mulstart
     LDA #0
     LDY #8 ; shifts needed
@@ -212,15 +210,15 @@ getchar     = &FFE0
     DEX
     BNE mulstart
     ; now add them up...
-    LDX #5
+    LDX #6
 .addstart
     CLC
     LDA xvector,X
-    ADC prodlo
-    STA prodlo
+    ADC vecsumlo
+    STA vecsumlo
     LDA cvector,X
-    ADC prodhi
-    STA prodhi
+    ADC vecsumhi
+    STA vecsumhi
 
     DEX
     BNE addstart
@@ -228,13 +226,44 @@ getchar     = &FFE0
 
 .printshort
     ; specifically, the short located at &70-&71
-    LDA prodlo
+    LDA #10
     JSR putchar
-    LDA prodhi
+    ; With thanks to Jgharston of beebwiki
+    ; beebwiki.mdfs.net/Number_output_in_6502_machine_code
+    LDY #8              ; Offset to powers of ten
+.print16loop1
+    LDX #255            ; Start with digit=-1
+    SEC
+.print16loop2
+    LDA vecsumlo        ; Subtract current tens
+    SBC powersoften+0,Y
+    STA vecsumlo
+    LDA vecsumhi
+    SBC powersoften+1,Y
+    STA vecsumhi
+    INX                 ; Loop until <0
+    BCS print16loop2
+    LDA vecsumlo        ; Add current tens back in
+    ADC powersoften+0,Y
+    STA vecsumlo
+    LDA vecsumhi
+    ADC powersoften+1,Y
+    STA vecsumhi
+    TXA                 ; print it
+    ORA #48
     JSR putchar
+    DEY
+    DEY
+    BPL print16loop1
     LDA #10
     JSR putchar
     RTS
+.powersoften
+    EQUW 1
+    EQUW 10
+    EQUW 100
+    EQUW 1000
+    EQUW 10000
 
 .crash
     LDA #120
@@ -243,10 +272,6 @@ getchar     = &FFE0
     JSR putchar
     LDA #120
     JSR putchar ; x_x
-.final
-    LDA #10
-    JSR putchar
-
     BRK
 
 .end
