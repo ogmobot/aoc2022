@@ -10,16 +10,16 @@ charcount   = &10
 tempx       = &20
 intbuffer   = &30
 sumbuffer   = &40
-digitbuffer = &50
+digitbuffer = &41
+tensflag    = &42
 putchar     = &FFEE
 getchar     = &FFE0
 
     ORG &8000
 
 .start
+    LDX #1  ; sprite index (addx changes this)
     LDA #0
-    TAX     ; sprite index (addx changes this)
-    LDA #1
     STA charcount
 .mainloop
     ;LDA #108
@@ -74,6 +74,7 @@ getchar     = &FFE0
 .getint
     LDA #0
     STA sumbuffer
+    STA tensflag ; lucky there are no 3-digit nums
     TAX
     INX
 .getintloop
@@ -92,25 +93,33 @@ getchar     = &FFE0
     SBC #48 ; 0
     STA digitbuffer
     CLC
-    ; multiply by ten, lol
-    LDA sumbuffer
-    ADC sumbuffer
-    ADC sumbuffer
-    ADC sumbuffer
-    ADC sumbuffer
-    ADC sumbuffer
-    ADC sumbuffer
-    ADC sumbuffer
-    ADC sumbuffer
-    ADC sumbuffer
-
+    LDA tensflag
+    BEQ onescolumn
+    ; multiply by ten
+    CLC
+    LDA digitbuffer
     ADC digitbuffer
+    ADC digitbuffer
+    ADC digitbuffer
+    ADC digitbuffer
+    ADC digitbuffer
+    ADC digitbuffer
+    ADC digitbuffer
+    ADC digitbuffer
+    ADC digitbuffer
+    STA digitbuffer
+
+.onescolumn
+    LDA #1
+    STA tensflag
+    LDA digitbuffer
+    ADC sumbuffer
     STA sumbuffer
-    LDA #0
-    BEQ getintnext
+
+    BVC getintnext
 .getintminus
     LDA sumbuffer
-    EOR #255
+    EOR #255    ; negate
     CLC
     ADC #1
     STA sumbuffer
@@ -119,33 +128,36 @@ getchar     = &FFE0
     RTS
 
 .docycle
-    TXA
-    CMP charcount
+    STX tempx
+    DEX
+    CPX charcount
     BEQ cycletrue
-    ADC #1
-    CMP charcount
+    INX
+    CPX charcount
     BEQ cycletrue
-    ADC #1
-    CMP charcount
+    INX
+    CPX charcount
     BEQ cycletrue
     LDA #46 ; .
     BNE cycleskip
 .cycletrue
     LDA #64 ; @
 .cycleskip
-    TXA
-    ADC #48
+    ;LDA tempx
+    ;CLC
+    ;ADC #48
     JSR putchar
 
-    LDA charcount
-    ADC #1
-    CMP #41
+    LDX charcount
+    INX
+    CPX #40
     BNE cyclenonewline
     LDA #10
     JSR putchar
-    LDA #1
+    LDX #0
 .cyclenonewline
-    STA charcount
+    STX charcount
+    LDX tempx
     RTS
 
 .crash
