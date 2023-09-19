@@ -95,3 +95,19 @@ The relatively slow speed of the language definitely feels like it was set up to
 **Noulith**: a neat little language for neat little tasks.
 
 **Syntax Highlight**: `f := \ x -> ...` (like in Scala, functions are defined by assigning an anonymous function to a variable; and like in Haskell, anonymous functions are defined with \\)
+
+Day 10: 6502 Assembly
+---------------------
+Phew, this was a tough one. I thought it'd be appropriate to solve the task inspired by "racing the beam" in a language contemporaneous with that problem, but the machine language designed for an eight-bit processor came with a fair few challenges.
+
+The first was parsing input. Lacking a primitive multiplication operation, I elected to parse two-digit numbers by adding the tens digit to the total ten times. (I initially did this to the units digit by mistake, leading to '32', for instance, being parsed as `23`.) If a `-` appeared, it the number was negated with two's complement.
+
+Another hurdle was debugging -- as it turns out, my usual method of adding more `print` statements isn't great when converting a value to printable characters has its own subroutine. Instead, I would call putchar on the value itself, then run the program output through hexdump. (I used this method to discover a bunch of off-by-one memory errors, but it was a fair bit of hassle.)
+
+Finally, the program needed to deal with a fair few 16-bit values: multipling pairs of 8-bit values to make 16-bit values, summing those values, and printing the result. Luckily, because the 6502 is so well known (and remembered), a wide variety routines for dealing with 16-bit (or 24-bit, 32-bit) values is available online. I needed to cobble a fair few of them together to get this program working.
+
+Many thanks to Rich Talbot-Watkins and Ian Piumarta, the authors of *Beebasm* and *run6502* respectively, without which I would have had a much harder time.
+
+**6502 Assembly**: it's easier to write than x86.
+
+**Syntax Highlight**: `EQU` (sets the value at this memory location to a literal value -- so you would use this to write a program by writing out the numeric value of every opcode by hand, instead of using mnemonics)
