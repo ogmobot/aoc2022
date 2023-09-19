@@ -12,13 +12,35 @@ intbuffer   = &30
 sumbuffer   = &40
 digitbuffer = &41
 tensflag    = &42
+xvector     = &50
+cvector     = &60
+prodlo      = &50
+prodhi      = &60
+vecsumlo    = &70
+vecsumhi    = &71
 putchar     = &FFEE
 getchar     = &FFE0
 
     ORG &8000
 
 .start
+    CLD
     LDX #1  ; sprite index (addx changes this)
+    LDY #0  ; vector index (increment every 40 cycles)
+    ; set up cycle vector for later multiplication
+    LDA #20
+    STA &60
+    LDA #60
+    STA &61
+    LDA #100
+    STA &62
+    LDA #140
+    STA &63
+    LDA #180
+    STA &64
+    LDA #220
+    STA &65
+
     LDA #0
     STA charcount
 .mainloop
@@ -27,9 +49,9 @@ getchar     = &FFE0
     JSR getchar
 ; test for eof or empty line
     CMP #255
-    BEQ maindone
+    BEQ p2done
     CMP #10
-    BEQ maindone
+    BEQ p2done
 ; test for 'n' (noop instruction)
     CMP #110
     BEQ gotn
@@ -68,7 +90,9 @@ getchar     = &FFE0
     TAX
     LDA #0
     BEQ mainloop
-.maindone
+.p2done
+    JSR vectormultiply
+    JSR printshort
     JMP final
 
 .getint
@@ -150,6 +174,12 @@ getchar     = &FFE0
 
     LDX charcount
     INX
+    CPX #20
+    BNE cyclenovector
+    LDA tempx
+    STA xvector,Y
+    INY
+.cyclenovector
     CPX #40
     BNE cyclenonewline
     LDA #10
@@ -158,6 +188,52 @@ getchar     = &FFE0
 .cyclenonewline
     STX charcount
     LDX tempx
+    RTS
+
+.vectormultiply
+    ; I am indebted to Leif Stensson and Niels Moeller for
+    ; this multiplication routine.
+    ; www.lysator.liu.se/~nisse/
+    LDX #5
+.mulstart
+    LDA #0
+    LDY #8 ; shifts needed
+    LSR xvector,X
+.mulloop
+    BCC mulskipadd
+    CLC
+    ADC cvector,X
+.mulskipadd
+    ROR A
+    ROR xvector,X
+    DEY
+    BNE mulloop
+    STA cvector,X
+    DEX
+    BNE mulstart
+    ; now add them up...
+    LDX #5
+.addstart
+    CLC
+    LDA xvector,X
+    ADC prodlo
+    STA prodlo
+    LDA cvector,X
+    ADC prodhi
+    STA prodhi
+
+    DEX
+    BNE addstart
+    RTS
+
+.printshort
+    ; specifically, the short located at &70-&71
+    LDA prodlo
+    JSR putchar
+    LDA prodhi
+    JSR putchar
+    LDA #10
+    JSR putchar
     RTS
 
 .crash
@@ -170,6 +246,7 @@ getchar     = &FFE0
 .final
     LDA #10
     JSR putchar
+
     BRK
 
 .end
