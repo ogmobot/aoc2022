@@ -1,6 +1,6 @@
 class Monkey:
     def __init__(self):
-        self.modval = 1
+        self.modval = None
         pass
 
     def give_item(self, val):
@@ -29,7 +29,9 @@ class Monkey:
         self.dest_false = int(lines[5].strip().split()[-1])
 
     def inspect(self, monkey_dict, part1):
-        item = self.held.pop(0) % self.modval
+        item = self.held.pop(0)
+        if self.modval != None:
+            item %= self.modval
         item = self.op(item)
         if part1:
             item = item // 3
