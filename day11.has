@@ -1,0 +1,18 @@
+struct Monkey {
+    var action  : string?
+    var divisor : int?
+    var dest_T  : int?
+    var dest_F  : int?
+}
+
+function monkey_init(mp : Monkey^, text : string) {
+    // "Unknown error in compile file"!
+    // Are struct pointers broken??
+}
+
+function main() : int {
+    var mp = new Monkey(1)
+    //monkey_init(mp, "foo bar")
+    delete mp
+    return 0
+}
