@@ -8,11 +8,11 @@ use strings;
 type monkey = struct {
     active  : bool,
     action  : str,
-    held    : []int,
-    divisor : int,
+    held    : []u64,
+    divisor : u64,
     dest_T  : size,
     dest_F  : size,
-    counter : size
+    counter : u64
 };
 
 fn monkey_init(monkeys : *[12]monkey, text : str) void = {
@@ -35,7 +35,7 @@ fn monkey_init(monkeys : *[12]monkey, text : str) void = {
     );
     defer free(items);
     for (let i = 0z; i < len(items); i += 1) {
-        append(monkeys[m].held, strconv::stoi(items[i])!);
+        append(monkeys[m].held, strconv::stou64(items[i])!);
     };
     // Operation
     let tokens = strings::tokenize(strings::ltrim(lines[2], ' '), " ");
@@ -48,7 +48,7 @@ fn monkey_init(monkeys : *[12]monkey, text : str) void = {
     strings::next_token(&tokens); // Test:
     strings::next_token(&tokens); // divisible
     strings::next_token(&tokens); // by
-    monkeys[m].divisor = strconv::stoi(strings::next_token(&tokens) as str)!;
+    monkeys[m].divisor = strconv::stou64(strings::next_token(&tokens) as str)!;
     // If true
     let tokens = strings::tokenize(strings::ltrim(lines[4], ' '), " ");
     strings::next_token(&tokens); // If
@@ -68,22 +68,22 @@ fn monkey_init(monkeys : *[12]monkey, text : str) void = {
     return;
 };
 
-fn operate(old : int, operation : str) int = {
+fn operate(old : u64, operation : str) u64 = {
     let tokens = strings::tokenize(operation, " ");
-    let a = 0;
+    let a : u64 = 0;
     const stra = strings::next_token(&tokens) as str;
     if (strings::compare("old", stra) == 0) {
         a = old;
     } else {
-        a = strconv::stoi(stra)!;
+        a = strconv::stou64(stra)!;
     };
     const op = strings::next_token(&tokens) as str;
-    let b = 0;
+    let b : u64 = 0;
     const strb = strings::next_token(&tokens) as str;
     if (strings::compare("old", strb) == 0) {
         b = old;
     } else {
-        b = strconv::stoi(strb)!;
+        b = strconv::stou64(strb)!;
     };
     if (strings::compare("+", op) == 0) {
         return a + b;
@@ -95,8 +95,8 @@ fn operate(old : int, operation : str) int = {
     return 0;
 };
 
-fn do_round(monkeys : *[12]monkey, who : size, part1 : bool) void = {
-    // Recurses until it finds a non-active monkey
+fn do_round(monkeys : *[12]monkey, who : size, modder : (void | u64)) void = {
+    // Recurses until it reaches a non-active monkey
     if (!monkeys[who].active) {
         return;
     };
@@ -105,22 +105,36 @@ fn do_round(monkeys : *[12]monkey, who : size, part1 : bool) void = {
         monkeys[who].counter += 1;
         let value = monkeys[who].held[0];
         delete(monkeys[who].held[0]);
-        fmt::println("monkey", who, "inspects", value)!;
         value = operate(value, monkeys[who].action);
-        if (part1) {
-            value = value / 3;
+        match (modder) {
+        case void => value /= 3;
+        case let modval : u64 => value %= modval;
         };
         if (value % monkeys[who].divisor == 0) {
             append(monkeys[monkeys[who].dest_T].held, value);
-            fmt::println("sends", value, "to monkey", monkeys[who].dest_T)!;
         } else {
             append(monkeys[monkeys[who].dest_F].held, value);
-            fmt::println("sends", value, "to monkey", monkeys[who].dest_F)!;
         };
     };
 
-    do_round(monkeys, who + 1, part1);
+    do_round(monkeys, who + 1, modder);
     return;
+};
+
+fn monkey_business(monkeys : *[12]monkey) u64 = {
+    let first  : u64 = 0;
+    let second : u64 = 0;
+    for (let who = 0; monkeys[who].active; who += 1) {
+        if (monkeys[who].counter > first) {
+            second = first;
+            first = monkeys[who].counter;
+        } else {
+            if (monkeys[who].counter > second) {
+                second = monkeys[who].counter;
+            };
+        };
+    };
+    return first * second;
 };
 
 export fn main() void = {
@@ -158,16 +172,18 @@ export fn main() void = {
         free(monkeys_p1[i].held);
     };
 
-    fmt::println("Hello, world!")!;
+    // Part 1
     for (let i = 0z; i < 20; i += 1) {
-        do_round(&monkeys_p1, 0, true);
+        do_round(&monkeys_p1, 0, void);
     };
-    fmt::println(monkeys_p1[0].counter)!;
-    fmt::println(monkeys_p1[1].counter)!;
-    fmt::println(monkeys_p1[2].counter)!;
-    fmt::println(monkeys_p1[3].counter)!;
-    fmt::println(monkeys_p1[4].counter)!;
-    fmt::println(monkeys_p1[5].counter)!;
-    fmt::println(monkeys_p1[6].counter)!;
-    fmt::println(monkeys_p1[7].counter)!;
+    fmt::println(monkey_business(&monkeys_p1))!;
+    // Part 2
+    let modval : u64 = 1;
+    for (let who = 0z; monkeys_p2[who].active; who += 1) {
+        modval *= monkeys_p2[who].divisor;
+    };
+    for (let i = 0z; i < 10000; i += 1) {
+        do_round(&monkeys_p2, 0, modval);
+    };
+    fmt::println(monkey_business(&monkeys_p2))!;
 };
