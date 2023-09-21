@@ -147,13 +147,13 @@ export fn main() void = {
     defer free(monkey_strings);
 
     const dummy = monkey {
-            active  = false,
-            action  = "",
-            held = [],
-            divisor = 0,
-            dest_T  = 0,
-            dest_F  = 0,
-            counter = 0
+        active  = false,
+        action  = "",
+        held = [],
+        divisor = 0,
+        dest_T  = 0,
+        dest_F  = 0,
+        counter = 0
     };
     // 12 monkeys ought to be enough for anybody
     let monkeys_p1 : [12]monkey = [dummy...];

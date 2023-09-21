@@ -111,3 +111,15 @@ Many thanks to Rich Talbot-Watkins and Ian Piumarta, the authors of *Beebasm* an
 **6502 Assembly**: it's easier to write than x86.
 
 **Syntax Highlight**: `EQU` (sets the value at this memory location to a literal value -- so you would use this to write a program by writing out the numeric value of every opcode by hand, instead of using mnemonics)
+
+Day 11: Hare
+------------
+*The Hare and the Monkeys*... wasn't that one of Aesop's fables?
+
+Hare is a language that reminds me a lot of Zig, in that it allows very fine control of memory allocation and has features designed to interoperate with C. I spent a lot of time ensuring the program didn't leak memory, implicitly cast to potentially incompatible types, didn't implicitly ignore possible errors, etc. (just as I would have in Zig, or Rust). As to which I prefer out of Zig and Hare, I'm not yet sure. Hare's automatic pointer dereferencing is nice, but I prefer Zig's approach for the syntax of structure literals. Both languages are still in development, but I don't think either one will clearly win out over the other. Right now, I'm more familiar with Zig, so if I was forced to choose between the two, I suppose that would be the deciding factor.
+
+While writing this program I discovered a bug in my original Python implementation -- I had modified it after writing Part 2 in a way that stopped my Part 1 solution from working. (I was trying to work out why my Hare program produced the "wrong" answer compared to the Python one -- but it turns out the Hare program wasn't the one with the issue!)
+
+**Hare**: yet another better C.
+
+**Syntax Highlight**: `assert((*p).x == p.x)` (auto-dereferencing)
