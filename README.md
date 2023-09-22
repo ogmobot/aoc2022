@@ -123,3 +123,11 @@ While writing this program I discovered a bug in my original Python implementati
 **Hare**: yet another better C.
 
 **Syntax Highlight**: `assert((*p).x == p.x)` (auto-dereferencing)
+
+Day 12: Femtolisp
+-----------------
+Ah, I love writing that `(cons new-coord old-path)` that you get when pathfinding in Lisp. Femtolisp wasn't a very surprising language, and most of this program could run without modification in any other Scheme interpreter. For some reason, my Femtolisp interpreter doesn't like writing to the standard output stream when running code from a file, so I wrote the output to the standard error stream instead. It also had trouble understanding functions like `with-input-from-file`.
+
+**Femtolisp**: it's just LISP (but small).
+
+**Syntax Highlight**: `integer?` (functions that test a predicate typically end with `?` to indicate this)
