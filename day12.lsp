@@ -50,21 +50,19 @@
     (and (= (car p1) (car p2)) (= (cdr p1) (cdr p2))))
 
 (define (bfs grid adj-cond done? paths visited)
-    (let ((path (car paths)))
+    (let ((path (car paths))
+          (here (caar paths)))
         (if (done? grid path)
             path
             (bfs grid adj-cond done?
                 (append
                     (cdr paths)
-                    (if (member (car path) visited)
+                    (if (member here visited)
                         ()
                         (map
                             (lambda (new-coord) (cons new-coord path))
-                            (filter
-                                (lambda (new-coord)
-                                    (not (member new-coord visited)))
-                                (adjacent grid (car path) adj-cond)))))
-                (cons (car path) visited)))))
+                            (adjacent grid here adj-cond))))
+                (cons here visited)))))
 
 (let* ((fp          (file "input12.txt" :read))
        (grid        (list->vector (io.readlines fp)))
