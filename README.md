@@ -131,3 +131,13 @@ Ah, I love writing that `(cons new-coord old-path)` that you get when pathfindin
 **Femtolisp**: it's just LISP (but small).
 
 **Syntax Highlight**: `integer?` (functions that test a predicate typically end with `?` to indicate this)
+
+Day 13: Idris
+-------------
+Idris is a language very similar to Haskell: it's a language with a focus on types and pure functions. Just like last year's Haskell program, the toughest part of the Idris program was dealing with input and output (and just like last year's Haskell program, everything instantly worked correctly as soon as the IO got off the ground). Idris makes a small concession on completeness compared to Haskell -- it allows the modifier `partial` to indicate a function doesn't handle all possible input values. Other than that, I couldn't really tell the difference between the languages (although part of that is definitely due to my unfamiliarity with both languages).
+
+The main difference between the Python and Idris implementations of this task is that Python "parses" the input file with `eval`. *This is a terrible idea!* In Idris, I took the time to write an actual parser. I also set up a LISP-inspired "NestedList" type for Idris, since I couldn't work out how to make a List type that could contain elements of its own type. Again, someone more familiar with Idris (or Haskell) could likely do a much better job.
+
+**Idris**: just like Haskell, but different(?).
+
+**Syntax Highlight**: `partial` (by default, functions are `covering`, and must account for all possible input values -- but this behaviour can be overridden)
