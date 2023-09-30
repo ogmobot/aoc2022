@@ -1,6 +1,5 @@
-export SAND_START
-START_X = 500
-START_Y =   0
+export START_X = 500
+export START_Y =   0
 
 -- tables are pointers, so can't easily be used as keys.
 -- Use grid[idx(5, 7)] instead of grid[{5, 7}]

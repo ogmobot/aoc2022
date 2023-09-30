@@ -141,3 +141,13 @@ The main difference between the Python and Idris implementations of this task is
 **Idris**: just like Haskell, but different(?).
 
 **Syntax Highlight**: `partial` (by default, functions are `covering`, and must account for all possible input values -- but this behaviour can be overridden)
+
+Day 14: MoonScript
+------------------
+MoonScript is a layer of syntactic sugar on top of Lua. It's a nicer language to write in compared to Lua -- shortcuts like `i += 1` and `continue` that aren't present in Lua work just as you'd expect in MoonScript. (The local-by-default variables are nice, too.) Its developer describes it as "CoffeeScript for Lua", which makes me suspect I'd enjoy CoffeeScript as well.
+
+My solution for this problem is essentially the same as the Python version, but with integer keys for the hashtable used to compute the solution. Compiling and printing the code in Lua with `moonc -p day14.moon` was useful on a few occasions. MoonScript has a lot of support for object-oriented programming that I didn't take advantage of here.
+
+**MoonScript**: Lua with added sugar.
+
+**Syntax Highlight**: `[i for i in iter when i > 0]` (list comprehensions)
