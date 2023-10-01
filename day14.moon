@@ -12,7 +12,7 @@ get_text = (filename) ->
     text = io.read "*all"
     io.input!\close!
     io.input tmp
-    text
+    return text
 
 draw_line = (grid, a, b) ->
     x , y  = a\match "(%d+),(%d+)"
@@ -22,9 +22,9 @@ draw_line = (grid, a, b) ->
     dx, dy = 0, 0
     if x == x1
         dx = 0
-        dy = if y1 > y then dy = 1 else dy = -1
+        dy = if y1 > y then 1 else -1
     else
-        dx = if x1 > x then dx = 1 else dx = -1
+        dx = if x1 > x then 1 else -1
         dy = 0
     while not (x == x1 and y == y1)
         grid[idx(x, y)] = true
@@ -80,4 +80,3 @@ main = ->
     print counter
 
 main!
-
