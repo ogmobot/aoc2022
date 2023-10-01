@@ -151,3 +151,19 @@ My solution for this problem is essentially the same as the Python version, but 
 **MoonScript**: Lua with added sugar.
 
 **Syntax Highlight**: `[i for i in iter when i > 0]` (list comprehensions)
+
+Day 15: Prolog
+--------------
+What a weird language. Prolog is a language in which the order of statements (in theory) makes little difference to the output of a program, except perhaps the order of I/O side-effects. In practice, the order of statements can make a big difference to the program's performance. My Prolog implementation runs more slowly than my Python one -- which was not entirely unexpected -- but I'm sure someone more familiar with the language would be able to improve the run time by a fair amount.
+
+Prolog's a very good language for solving problems that have multiple constraints or solutions. To learn the basics of the language, I wrote a program to solve a specific instance of the kind of puzzle that runs, "Five men live in five houses, with their five pets and five favourite drinks. Given the following set of restrictions, determine who owns the zebra..." Prolog makes solving problems of this kind extraordinarily straightforward.
+
+For part 2, I could have written a more succinct program along these lines:
+
+`part2(Probes) :- between(0, 4M, X), between(0, 4M, Y), not_covered((X, Y), Probes).`
+
+This program, although very easy to read, would not terminate in a reasonable amount of time.
+
+**Prolog**: it's the most declarative there is.
+
+**Syntax Highlight**: `!` ("cut", the instruction to cease seeking solutions)

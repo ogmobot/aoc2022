@@ -91,13 +91,12 @@ part2(Probes) :-
     sort(Unsorted, Intervals),
     find_gap(Intervals, X),
     Result is (X * 4000000) + Y,
-    write(X), write(","), writeln(Y),
     writeln(Result).
 
 main :-
     get_lines("input15.txt", Probes),
     part1(Probes),
-    part2(Probes), % takes... a while.
+    part2(Probes), % takes ~30 min
     halt.
 
 :- initialization(main).
