@@ -52,6 +52,65 @@ terra freeBasic(self : &&BasicQueue)
     end
 end
 
+-- World's worst priority queue
+
+struct Priority {
+    location : uint;
+    score    : uint;
+    time     : uint;
+    valves   : uint64;
+    next     : &Priority;
+}
+terra Priority:init(
+    location : uint,
+    score    : uint,
+    time     : uint,
+    valves   : uint64
+)
+    self.location = location
+    self.score    = score
+    self.time     = time
+    self.valves   = valves
+    self.next     = nil
+end
+terra pushPriority(
+    self     : &&Priority,
+    location : uint,
+    score    : uint,
+    time     : uint,
+    valves   : uint64
+)
+    -- pushes in O(n) time
+    var new : &Priority = [&Priority](Cstdlib.calloc(1, sizeof(Priority)))
+    new:init(location, score, time, valves)
+    -- maximum score goes to front of queue
+    if (@self) == nil or new.score > (@self).score then
+        new.next = @self
+        @self = new
+    else
+        var trace : &Priority = (@self)
+        while trace.next ~= nil do
+            if new.score > trace.next.score then
+                new.next = trace.next
+                trace.next = new
+                break
+            end
+            trace = trace.next
+        end
+        if trace.next == nil then
+            trace.next = new
+        end
+    end
+end
+terra popPriority(self : &&Priority) : Priority
+    var result : Priority
+    var tmp = @self
+    result:init(tmp.location, tmp.score, tmp.time, tmp.valves)
+    @self = tmp.next
+    Cstdlib.free(tmp)
+    return result
+end
+
 -- Matrix struct/class
 
 struct Matrix {
@@ -83,7 +142,6 @@ function get_contents(filename)
     local text = io.read("*all")
     io.input():close()
     io.input(tmp)
-    --return text
     local test_data = [[Valve AA has flow rate=0; tunnels lead to valves DD, II, BB
 Valve BB has flow rate=13; tunnels lead to valves CC, AA
 Valve CC has flow rate=2; tunnels lead to valves DD, BB
@@ -106,12 +164,9 @@ Valve JJ has flow rate=21; tunnel leads to valve II
     7=GG
     8=HH
     9=JJ
-        A   B   C   D   E   F   G   H   I   J
-    A   0   1   2   1   2   .   .   .   1   .
-    B   1   0   1   2   .   .   .   .   2   .
-    C   2   1   0   .   .   .   .   .   .   .
     ]]
-    return test_data
+    return text
+    --return test_data
 end
 
 function build_basic(text)
@@ -152,6 +207,32 @@ function build_basic(text)
     return connects, get_reward, counter
 end
 
+function make_cache()
+    local cache = {}
+    local cache_test = function(location, score, time, valves)
+        -- returns false if there is already an equal or better node
+        -- returns true (and enters the node in the cache) otherwise
+        -- (better: equal location *and* equal or higher score *and* 
+        --  equal or lesser time, *and* equal or greater valves)
+        if cache[location] == nil then
+            cache[location] = {}
+        end
+        for _, node in pairs(cache[location]) do
+            if node.score >= score
+            and node.time <= time
+            and node.valves >= valves then
+                return false
+            end
+        end
+        table.insert(cache[location], {score=score, time=time, valves=valves})
+        return true
+    end
+    return terralib.cast(
+        {uint, uint, uint, uint64} -> {bool},
+        cache_test
+    )
+end
+
 -- Terra functions
 
 terra build_expert(
@@ -159,36 +240,23 @@ terra build_expert(
     get_reward : {uint} -> {int},
     n          : uint
 ) : Matrix
-    -- The only cells populated are ones with non-zero rewards and AA,
-    -- so a lot of this matrix will be zeroes.
     var distances : Matrix
     distances:init(n, n) -- Memory allocation
     -- Note: get_reward takes arguments in range [0..n-1]
     for i = 0, n do
-        if i == 0 or get_reward(i) > 0 then
-            -- BFS from here
-            Cstdio.printf("\nBFSing...\n")
-            var queue : &BasicQueue = nil
-            var visited : uint64 = 0
-            pushBasic(&queue, i, 0)
-            var qlen = 1
-            while queue ~= nil do -- queue is freed by this process
-                Cstdio.printf("qlen=%d ", qlen)
-                var node = popBasic(&queue)
-                qlen = qlen - 1
-                Cstdio.printf("node at loc=%d\n", node.location)
-                if ((1 << node.location) and visited) == 0 then
-                    Cstdio.printf("\tvisiting %d\n", node.location)
-                    visited = (1 << node.location) or visited
-                    if get_reward(node.location) > 0 then
-                        distances:set(i, node.location, node.dist)
-                    end
-                    for j = 0, n do
-                        if connects(i, j) and (((1 << j) and visited) == 0) then
-                            Cstdio.printf("\tpushing %d\n", j)
-                            pushBasic(&queue, j, node.dist + 1)
-                            qlen = qlen + 1
-                        end
+        -- BFS from here
+        var queue : &BasicQueue = nil
+        var visited : uint64 = 0
+        pushBasic(&queue, i, 0)
+        while queue ~= nil do -- queue is freed by this process
+            var node = popBasic(&queue)
+            if ((1 << node.location) and visited) == 0 then
+                visited = (1 << node.location) or visited
+                distances:set(i, node.location, node.dist)
+                for j = 0, n do
+                    if (connects(node.location, j)
+                        and (((1 << j) and visited) == 0)) then
+                        pushBasic(&queue, j, node.dist + 1)
                     end
                 end
             end
@@ -203,13 +271,57 @@ terra solve(
     n          : uint
 )
     var distances = build_expert(connects, get_reward, n)
-    for a = 0, n do
-        for b = 0, n do
-            Cstdio.printf("%d ", distances:get(a, b))
+
+    -- Part 1
+    var attempts : &Priority = nil
+    var best_score : uint = 0
+    var is_good = [ make_cache() ]
+    --var best_scores : &int = [&int](Cstdlib.calloc(n, sizeof(int)))
+    --defer Cstdlib.free(best_scores)
+    -- location, score, time, valves
+    pushPriority(&attempts, 0, 0, 0, 0)
+    while attempts ~= nil do
+        var attempt = popPriority(&attempts)
+        if attempt.time == 30 then
+            if attempt.score > best_score then
+                best_score = attempt.score
+            end
+        elseif (attempt.time < 30)
+        and is_good(
+            attempt.location, attempt.score, attempt.time, attempt.valves
+        ) then
+            Cstdio.printf("Popping node\n\tloc=%2u time=%2u score=%4u\n\t%064b\n",
+                attempt.location, attempt.time, attempt.score, attempt.valves)
+            var score_delta : uint = 0
+            for j = 0, n do
+                if ((1 << j) and attempt.valves) > 0 then
+                    score_delta = score_delta + get_reward(j)
+                end
+            end
+            -- the "do nothing" option
+            pushPriority(&attempts,
+                attempt.location,
+                attempt.score + ((30 - attempt.time) * score_delta),
+                30,
+                attempt.valves
+            )
+            for dest = 0, n do
+                if ((dest ~= attempt.location)
+                and (((1 << dest) and attempt.valves) == 0)
+                and (get_reward(dest) > 0)
+                ) then
+                    var dist : uint = distances:get(attempt.location, dest)
+                    pushPriority(&attempts,
+                        dest,
+                        attempt.score + ((dist + 1) * score_delta),
+                        attempt.time + dist + 1,
+                        attempt.valves or (1 << dest)
+                    )
+                end
+            end
         end
-        Cstdio.printf("\n")
     end
-    Cstdio.printf("foo\n")
+    Cstdio.printf("%u\n", best_score)
 end
 
 function main()
