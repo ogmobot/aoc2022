@@ -165,8 +165,8 @@ Valve JJ has flow rate=21; tunnel leads to valve II
     8=HH
     9=JJ
     ]]
-    return text
-    --return test_data
+    --return text
+    return test_data
 end
 
 function build_basic(text)
@@ -227,10 +227,7 @@ function make_cache()
         table.insert(cache[location], {score=score, time=time, valves=valves})
         return true
     end
-    return terralib.cast(
-        {uint, uint, uint, uint64} -> {bool},
-        cache_test
-    )
+    return cache_test
 end
 
 -- Terra functions
@@ -268,37 +265,18 @@ end
 terra solve(
     connects   : {uint, uint} -> {bool},
     get_reward : {uint} -> {int},
-    n          : uint
-)
+    n          : uint,
+    targets    : uint64
+) : uint
 
     var distances = build_expert(connects, get_reward, n)
-    --[[
-    for i = 0, n do
-        for j = 0, n do
-            if connects(i, j) then
-                Cstdio.printf(" 1")
-            else
-                Cstdio.printf(" 0")
-            end
-        end
-        Cstdio.printf("\n")
-    end
-    Cstdio.printf("\n")
 
-    for i = 0, distances.height do
-        for j = 0, distances.width do
-            Cstdio.printf("%2d ", distances:get(i, j))
-        end
-        Cstdio.printf("\n", i)
-    end
-    ]]
-
-    -- Part 1
     var attempts : &Priority = nil
     var best_score : uint = 0
-    var is_good = [ make_cache() ]
-    --var best_scores : &int = [&int](Cstdlib.calloc(n, sizeof(int)))
-    --defer Cstdlib.free(best_scores)
+    var is_good = [ terralib.cast(
+        {uint, uint, uint, uint64} -> {bool},
+        make_cache()
+    ) ]
     -- location, score, time, valves
     pushPriority(&attempts, 0, 0, 0, 0)
     while attempts ~= nil do
@@ -308,11 +286,10 @@ terra solve(
                 best_score = attempt.score
             end
         elseif (attempt.time < 30)
-        and is_good(
-            attempt.location, attempt.score, attempt.time, attempt.valves
-        ) then
-            --Cstdio.printf("Popping node\n\tloc=%2u time=%2u score=%4u\n\t%064b\n",
-                --attempt.location, attempt.time, attempt.score, attempt.valves)
+        --and is_good(
+            --attempt.location, attempt.score, attempt.time, attempt.valves
+        --) then
+        then
             var score_delta : uint = 0
             for j = 0, n do
                 if ((1ULL << j) and attempt.valves) > 0 then
@@ -328,9 +305,11 @@ terra solve(
             )
             for dest = 0, n do
                 if ((dest ~= attempt.location)
+                and (((1ULL << dest) and targets) ~= 0)
                 and (((1ULL << dest) and attempt.valves) == 0)
                 and (get_reward(dest) > 0)
                 ) then
+                    --Cstdio.printf("visiting %d\n", dest)
                     var dist : uint = distances:get(attempt.location, dest)
                     pushPriority(&attempts,
                         dest,
@@ -342,14 +321,78 @@ terra solve(
             end
         end
     end
+    Cstdio.printf("targets=%16b\n", targets)
     Cstdio.printf("%u\n", best_score)
+    return best_score
+end
+
+terra next_permutation(
+    get_reward : {uint} -> {int},
+    mask : uint64,
+    n : uint
+) : uint64
+    -- returns a mask of switches to flip
+    -- (counts up in binary, but only for the locations with switches:
+    --      Find the least significant and add 1 to it.
+    --      If it was 1 already, set it to zero and go to the next digit.
+    --      Repeat until a 0 has been set to 1.)
+    var place : uint = 0
+    while true do
+        while place < n and get_reward(place) == 0 do
+            place = place + 1
+        end
+        if place == n then break end
+        if ((1ULL << place) and mask) ~= 0 then
+            mask = mask - (1ULL << place)
+            place = place + 1
+        else
+            mask = mask + (1ULL << place)
+            break
+        end
+    end
+    return mask -- returns 0 on "overflow"
+end
+
+terra solve_pair(
+    connects   : {uint, uint} -> {bool},
+    get_reward : {uint} -> {int},
+    n          : uint
+)
+    var all_valid : uint64 = 0ULL
+    for i : uint = 0, n do
+        if get_reward(i) > 0 then
+            all_valid = ((1ULL << i) or all_valid)
+        end
+    end
+    Cstdio.printf("valids =%16b\n", all_valid)
+    var candidate : uint64 = next_permutation(get_reward, 0ULL, n)
+    var best_attempt = 0
+    while candidate ~= 0ULL do
+        var attempt = (
+            solve(connects, get_reward, n, candidate)
+            +
+            solve(connects, get_reward, n, all_valid and (not candidate))
+        )
+        Cstdio.printf("%u\n", attempt)
+        if attempt > best_attempt then
+            best_attempt = attempt
+            Cstdio.printf("%d\n", best_attempt)
+        end
+        candidate = next_permutation(get_reward, candidate, n)
+        --if true then return end
+    end
+    Cstdio.printf("%d\n", best_attempt)
+    return
 end
 
 function main()
     local connects, get_reward, n = build_basic(get_contents("input16.txt"))
     local terra_connected = terralib.cast({uint, uint} -> {bool}, connects)
     local terra_reward    = terralib.cast({uint} -> {int}, get_reward)
-    solve(terra_connected, terra_reward, n)
+    -- Part 1
+    print(solve(terra_connected, terra_reward, n, (0ULL - 1)))
+    -- Part 2
+    solve_pair(terra_connected, terra_reward, n)
 end
 
 main()
