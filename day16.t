@@ -250,12 +250,12 @@ terra build_expert(
         pushBasic(&queue, i, 0)
         while queue ~= nil do -- queue is freed by this process
             var node = popBasic(&queue)
-            if ((1 << node.location) and visited) == 0 then
-                visited = (1 << node.location) or visited
+            if ((1ULL << node.location) and visited) == 0 then
+                visited = ((1ULL << node.location) or visited)
                 distances:set(i, node.location, node.dist)
                 for j = 0, n do
                     if (connects(node.location, j)
-                        and (((1 << j) and visited) == 0)) then
+                        and (((1ULL << j) and visited) == 0)) then
                         pushBasic(&queue, j, node.dist + 1)
                     end
                 end
@@ -270,7 +270,28 @@ terra solve(
     get_reward : {uint} -> {int},
     n          : uint
 )
+
     var distances = build_expert(connects, get_reward, n)
+    --[[
+    for i = 0, n do
+        for j = 0, n do
+            if connects(i, j) then
+                Cstdio.printf(" 1")
+            else
+                Cstdio.printf(" 0")
+            end
+        end
+        Cstdio.printf("\n")
+    end
+    Cstdio.printf("\n")
+
+    for i = 0, distances.height do
+        for j = 0, distances.width do
+            Cstdio.printf("%2d ", distances:get(i, j))
+        end
+        Cstdio.printf("\n", i)
+    end
+    ]]
 
     -- Part 1
     var attempts : &Priority = nil
@@ -290,11 +311,11 @@ terra solve(
         and is_good(
             attempt.location, attempt.score, attempt.time, attempt.valves
         ) then
-            Cstdio.printf("Popping node\n\tloc=%2u time=%2u score=%4u\n\t%064b\n",
-                attempt.location, attempt.time, attempt.score, attempt.valves)
+            --Cstdio.printf("Popping node\n\tloc=%2u time=%2u score=%4u\n\t%064b\n",
+                --attempt.location, attempt.time, attempt.score, attempt.valves)
             var score_delta : uint = 0
             for j = 0, n do
-                if ((1 << j) and attempt.valves) > 0 then
+                if ((1ULL << j) and attempt.valves) > 0 then
                     score_delta = score_delta + get_reward(j)
                 end
             end
@@ -307,7 +328,7 @@ terra solve(
             )
             for dest = 0, n do
                 if ((dest ~= attempt.location)
-                and (((1 << dest) and attempt.valves) == 0)
+                and (((1ULL << dest) and attempt.valves) == 0)
                 and (get_reward(dest) > 0)
                 ) then
                     var dist : uint = distances:get(attempt.location, dest)
@@ -315,7 +336,7 @@ terra solve(
                         dest,
                         attempt.score + ((dist + 1) * score_delta),
                         attempt.time + dist + 1,
-                        attempt.valves or (1 << dest)
+                        attempt.valves or (1ULL << dest)
                     )
                 end
             end

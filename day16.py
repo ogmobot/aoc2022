@@ -14,6 +14,8 @@ Valve II has flow rate=0; tunnels lead to valves AA, JJ
 Valve JJ has flow rate=21; tunnel leads to valve II
 """.strip().split("\n")
 
+ORDER = ['AA']
+
 def get_num(text):
     digits = [d for d in list(text) if d.isdigit()]
     return int("".join(digits))
@@ -92,6 +94,22 @@ with open("input16.txt") as f:
         words = line.strip().split()
         flows[words[1]] = get_num(words[4])
         links[words[1]] = [w.strip(",") for w in words[9:]]
+        if words[1] not in ORDER:
+            ORDER.append(words[1])
+        for w in words[9:]:
+            if w.strip(",") not in ORDER:
+                ORDER.append(w.strip(","))
+
+#print(links)
+#for i in ORDER:
+    #for j in ORDER:
+        #print(" 1" if j in links[i] else " 0", end="")
+    #print()
+
+#for i in ORDER:
+    #for j in ORDER:
+        #print("{:2}".format(len(find_path(links, i, j))), end=" ")
+    #print()
 
 working_valves = [v for v in flows if flows[v] > 0]
 # part 1
@@ -102,4 +120,3 @@ print()
 
 # part 2 (takes ~15 min, or ~9 min with pypy)
 print(solve_pair(flows, links, "AA"))
-
