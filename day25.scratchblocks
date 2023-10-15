@@ -1,0 +1,32 @@
+when @greenFlag clicked
+replace item (1) of [snafu_digits v] with [=]
+replace item (2) of [snafu_digits v] with [-]
+replace item (3) of [snafu_digits v] with [0]
+replace item (4) of [snafu_digits v] with [1]
+replace item (5) of [snafu_digits v] with [2]
+set [line_index v] to [1]
+set [total v] to [0]
+repeat until <(line_index) \> (length of [text_input v]::data)>
+    add_snafu_to_total (item (line_index) of [text_input v])::custom
+    change [line_index v] by (1)
+end
+print_as_snafu (total) []::custom
+
+define add_snafu_to_total (snafu)
+set [snafu_value v] to [0]
+set [snafu_index v] to [1]
+repeat until <(snafu_index) \> (length of (snafu::custom)::operators)>
+    set [snafu_value v] to (((5) * (snafu_value)) + ((item # of (letter (snafu_index) of (snafu::custom)) in [snafu_digits v]) - (3)))
+    change [snafu_index v] by (1)
+end
+change [total v] by (snafu_value)
+
+define print_as_snafu (dec) (output_string)
+if <(dec::custom) = [0]> then
+    forever
+        say (output_string::custom)
+    end
+else
+    set [snafu_value v] to ((((dec::custom) + (2)) mod (5)) - (2))
+    print_as_snafu (round ((((dec::custom) + (2)) / (5)) - (0.5))) (join (item ((snafu_value) + (3)) of [snafu_digits v]) (output_string::custom))::custom
+end
