@@ -54,14 +54,13 @@ end
 
 -- World's worst priority queue
 
-struct Priority {
+struct PriorityNode {
     location : uint;
     score    : uint;
     time     : uint;
     valves   : uint64;
-    next     : &Priority;
 }
-terra Priority:init(
+terra PriorityNode:init(
     location : uint,
     score    : uint,
     time     : uint,
@@ -71,43 +70,92 @@ terra Priority:init(
     self.score    = score
     self.time     = time
     self.valves   = valves
-    self.next     = nil
 end
-terra pushPriority(
-    self     : &&Priority,
+struct Priority {
+    array  : &PriorityNode;
+    size   : uint;
+    length : uint;
+}
+terra getindexofLeft(k : uint) : uint
+    return (2 * (k + 1)) - 1
+end
+terra getindexofRight(k : uint) : uint
+    return (2 * (k + 1))
+end
+terra getindexofParent(k : uint) : uint
+    return ((k + 1) / 2) - 1
+end
+terra Priority:init(size : uint)
+    self.array = [&PriorityNode](Cstdlib.calloc(size, sizeof(PriorityNode)))
+    self.size = size
+    self.length = 0 -- location of first empty index
+end
+terra Priority:deinit()
+    Cstdlib.free(self.array)
+end
+terra Priority:push(
     location : uint,
     score    : uint,
     time     : uint,
     valves   : uint64
 )
-    -- pushes in O(n) time
-    var new : &Priority = [&Priority](Cstdlib.calloc(1, sizeof(Priority)))
-    new:init(location, score, time, valves)
-    -- maximum score goes to front of queue
-    if (@self) == nil or new.score > (@self).score then
-        new.next = @self
-        @self = new
-    else
-        var trace : &Priority = (@self)
-        while trace.next ~= nil do
-            if new.score > trace.next.score then
-                new.next = trace.next
-                trace.next = new
-                break
-            end
-            trace = trace.next
-        end
-        if trace.next == nil then
-            trace.next = new
-        end
+    if self.length == self.size then
+        Cstdio.printf("ERROR - queue full!")
+        return
+    end
+    (self.array[self.length]):init(location, score, time, valves)
+    var active = self.length
+    self.length = self.length + 1
+    -- maximum score goes to top of heap
+    while (active > 0)
+        and (self.array[active].score > self.array[getindexofParent(active)].score)
+    do
+        var tmp : PriorityNode = self.array[active]
+        self.array[active] = self.array[getindexofParent(active)]
+        self.array[getindexofParent(active)] = tmp
+        active = getindexofParent(active)
     end
 end
-terra popPriority(self : &&Priority) : Priority
-    var result : Priority
-    var tmp = @self
-    result:init(tmp.location, tmp.score, tmp.time, tmp.valves)
-    @self = tmp.next
-    Cstdlib.free(tmp)
+terra Priority:pop() : PriorityNode
+    var result : PriorityNode = self.array[0]
+    -- put rightmost node of array on top
+    self.length = self.length - 1
+    self.array[0] = self.array[self.length]
+    var active = 0
+    -- sift it down to its appropriate position
+    while getindexofLeft(active) < self.length do
+        -- loop condition is left child exists
+        if getindexofRight(active) < self.length then
+            -- right child exists
+            if (self.array[getindexofLeft(active)].score > self.array[getindexofRight(active)].score)
+                and (self.array[getindexofLeft(active)].score > self.array[active].score) then
+                -- swap with left child
+                var tmp : PriorityNode = self.array[active]
+                self.array[active] = self.array[getindexofLeft(active)]
+                self.array[getindexofLeft(active)] = tmp
+                active = getindexofLeft(active)
+            elseif self.array[getindexofRight(active)].score > self.array[active].score then
+                -- swap with right child
+                var tmp : PriorityNode = self.array[active]
+                self.array[active] = self.array[getindexofRight(active)]
+                self.array[getindexofRight(active)] = tmp
+                active = getindexofRight(active)
+            else
+                break
+            end
+        else
+            -- right child does not exist
+            if self.array[getindexofLeft(active)].score > self.array[active].score then
+                -- swap with left child
+                var tmp : PriorityNode = self.array[active]
+                self.array[active] = self.array[getindexofLeft(active)]
+                self.array[getindexofLeft(active)] = tmp
+                active = getindexofLeft(active)
+            else
+                break
+            end
+        end
+    end
     return result
 end
 
@@ -285,14 +333,16 @@ terra solve(
 
     var distances = build_expert(connects, get_reward, n)
 
-    var attempts : &Priority = nil
+    var attempts : Priority
+    attempts:init(65536) -- arbitrary big number
+    defer attempts:deinit()
     var best_score : uint = 0
     var is_good = [ make_cache() ]
     is_good(0xffffffff, 0, 0, 0) -- clear cache
     -- location, score, time, valves
-    pushPriority(&attempts, 0, 0, 0, 0)
-    while attempts ~= nil do
-        var attempt = popPriority(&attempts)
+    attempts:push(0, 0, 0, 0)
+    while attempts.length > 0 do
+        var attempt = attempts:pop()
         if attempt.time == time_limit then
             if attempt.score > best_score then
                 best_score = attempt.score
@@ -308,7 +358,7 @@ terra solve(
                 end
             end
             -- the "do nothing" option
-            pushPriority(&attempts,
+            attempts:push(
                 attempt.location,
                 attempt.score + ((time_limit - attempt.time) * score_delta),
                 time_limit,
@@ -321,7 +371,7 @@ terra solve(
                 and (get_reward(dest) > 0)
                 ) then
                     var dist : uint = distances:get(attempt.location, dest)
-                    pushPriority(&attempts,
+                    attempts:push(
                         dest,
                         attempt.score + ((dist + 1) * score_delta),
                         attempt.time + dist + 1,
