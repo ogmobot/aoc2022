@@ -167,3 +167,15 @@ This program, although very easy to read, would not terminate in a reasonable am
 **Prolog**: it's the most declarative there is.
 
 **Syntax Highlight**: `!` ("cut", the instruction to cease seeking solutions)
+
+Day 16: Terra
+-------------
+I find it fascinating that programs written in this language are necessarily "bilingual": all top-level code is Lua! Writing Terra feels a lot like writing C -- indeed, it can call C libraries directly -- except that it has all the trimmings of a much more modern language (like `defer` and automatically dereferencing pointers). The syntax, fittingly, is just like Lua's; with a few extensions like static typing that make compilation easier. Using Terra alongside both Lua (top-level or inline) and the C standard library functions makes it feel almost like writing in three languages at once.
+
+The language (like C!) does not have a built-in priority queue structure, nor queues, nor hash tables, etc. I implemented a few hash tables by hiding them within Lua functions, but wrote the priority queue and queue implementations myself (not generically, either, since I only had to use them this one time). What a headache! I'm glad this language exists, and I think it's easier to embed Lua into a Terra project than into a C project (in fact, that happens automatically), but in a task like this which gets easier with a bit of abstraction, Terra didn't feel like the ideal language.
+
+Although this program finds the solution to this program in about 10 minutes, it takes longer than an hour afterwards to terminate (I didn't actually wait for it in the end). A few ways to speed it up can be found in the comments at the end of the program file, but I think I'm done with this task for now.
+
+**Terra**: for when you need Lua to go faster.
+
+**Syntax Highlight**: `terra` (defines a Terra function -- as opposed to `function` which defines a Lua function)

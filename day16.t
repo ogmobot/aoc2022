@@ -433,6 +433,7 @@ terra solve_pair(
         )
         if attempt > best_attempt then
             best_attempt = attempt
+            Cstdio.printf("%d...\n", best_attempt)
         end
         candidate = next_permutation(get_reward, candidate, n)
     end
@@ -449,4 +450,8 @@ function main()
     print(solve_pair(terra_connected, terra_reward, n, 26))
 end
 
+-- Takes a very long time. This could be sped up with e.g. dynamic programming,
+-- getting a valve's full-time reward as soon as it's activated (rather than
+-- step by step), not checking {set A, set B} if {set B, set A} has already
+-- been checked.
 main()
