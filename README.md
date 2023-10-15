@@ -179,3 +179,13 @@ Although this program finds the solution to this program in about 10 minutes, it
 **Terra**: for when you need Lua to go faster.
 
 **Syntax Highlight**: `terra` (defines a Terra function -- as opposed to `function` which defines a Lua function)
+
+Day 25: Scratch
+---------------
+(I did this one out-of-order, between days 16 and 17.) Scratch is a great language -- for learning -- but it has its flaws. For instance, subroutines don't return values. There's probably some actor-based message-sending workaround, but I just had the subroutines modify global variables. I read somewhere that the language was to some extent inspired by LISP. After setting up the arithmetic in this program, and always selecting the operator first, I can see some of that influence. I was also happy to learn that the language supports recursion, another rather LISPy idea.
+
+Rather than provide the `.sb3` save file, I've provided a `.png` image of the code and a `.scratchblocks` textual representation. Scratch can't load external files, so to load the problem's input, first create a list variable named text_input; then right-click on that variable, select "Import", and navigate to the input file. This loads the file line-by-line into the list variable. The file `day25-example.png` shows an example of what the list looks like once loaded into Scratch.
+
+**Scratch**: it may be for kids, but you can [run Linux on top of it](https://scratch.mit.edu/users/bilman66/)!
+
+**Syntax Highlight**: `When I receive [...]` (event-based program flow)
