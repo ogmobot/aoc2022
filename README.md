@@ -180,6 +180,16 @@ Although this program finds the solution to this problem in about 10 minutes, it
 
 **Syntax Highlight**: `terra` (defines a Terra function -- as opposed to `function` which defines a Lua function)
 
+Day 17: Tcl
+-----------
+What a bizzare language. Everything is a string! No need for quotes around string literals -- `open input17.txt` is perfectly fine. No need to join list elements into a string -- the list already *is* a string (space-separated). Thus, no need to concatenate lists `a` and `b` -- the string `"$a $b"` (interpolating those variables) does just as well. The one thing that doesn't seem to be a string is Tcl's "array" (which is a hash table -- go figure).
+
+Tcl's way of handling common string and array functions is another thing that I find a bit unusual. While other languages might have something like `Array.size(x)`, Tcl has `array size x` -- which, of course, passes the strings `"size"` and `"x"` to the `array` function. The string passed in selects the routine that the function carries out.
+
+**Tcl**: it's stringly-typed.
+
+**Syntax Highlight**: `upvar` (pulls a variable into a scope from one scope up)
+
 Day 25: Scratch
 ---------------
 (I did this one out-of-order, between days 16 and 17.) Scratch is a great language -- for learning -- but it has its flaws. For instance, subroutines don't return values. There's probably some actor-based message-sending workaround, but I just had the subroutines modify global variables. I read somewhere that the language was to some extent inspired by LISP. After setting up the arithmetic in this program, and always selecting the operator first, I can see some of that influence. I was also happy to learn that the language supports recursion, another rather LISPy idea.
