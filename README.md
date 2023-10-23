@@ -92,6 +92,8 @@ My solution for this program uses LISP-style linked lists and functions. I could
 
 The relatively slow speed of the language definitely feels like it was set up to write little scripts, rather than tracking the locations of ten moving objects across thousands of steps. Still, better to use Noulith for this task rather than an even more computationally-intensive one.
 
+P.S. betaveros himself also used this language to solve this task. His code can be found [here](https://github.com/betaveros/advent-of-code-2022/blob/main/p9-post.noul) and is a lot cleaner than mine!
+
 **Noulith**: a neat little language for neat little tasks.
 
 **Syntax Highlight**: `f := \ x -> ...` (like in Scala, functions are defined by assigning an anonymous function to a variable; and like in Haskell, anonymous functions are defined with \\)
@@ -192,7 +194,7 @@ Tcl's way of handling common string and array functions is another thing that I 
 
 Day 25: Scratch
 ---------------
-(I did this one out-of-order, between days 16 and 17.) Scratch is a great language -- for learning -- but it has its flaws. For instance, subroutines don't return values. There's probably some actor-based message-sending workaround, but I just had the subroutines modify global variables. I read somewhere that the language was to some extent inspired by LISP. After setting up the arithmetic in this program, and always selecting the operator first, I can see some of that influence. I was also happy to learn that the language supports recursion, another rather LISPy idea.
+(I did this one out-of-order, between days 16 and 17.) Scratch is a great language -- for learning -- but it has its flaws. For instance, subroutines don't return values. There's probably some actor-based message-sending workaround, but I just had the subroutines modify global variables. I read somewhere that the language was to some extent inspired by LISP (mostly via Smalltalk). After setting up the arithmetic in this program, and always selecting the operator first, I can see some of that influence. I was also happy to learn that the language supports recursion, another rather LISPy idea.
 
 Rather than provide the `.sb3` save file, I've provided a `.png` image of the code and a `.scratchblocks` textual representation. Scratch can't load external files, so to load the problem's input, first create a list variable named text_input; then right-click on that variable, select "Import", and navigate to the input file. This loads the file line-by-line into the list variable. The file `day25-example.png` shows an example of what the list looks like once loaded into Scratch.
 
