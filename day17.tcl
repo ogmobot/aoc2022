@@ -1,20 +1,10 @@
 #/usr/bin/env tclsh
 
-set fp [open "input17.txt"]
+set fp [open input17.txt]
 set jets [read -nonewline $fp]
 close $fp
 
 #set jets ">>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>"
-
-## RHS of each assignment is a list literal, heh
-#set SHAPES(0) "####"
-#set SHAPES(1) ".#. ### .#."
-#set SHAPES(2) "..# ..# ###"
-#set SHAPES(3) "# # # #"
-#set SHAPES(4) "## ##"
-
-#proc shape_height {s} {return [llength $s]}
-#proc shape_width  {s} {return [string length [lindex $s 0]]}
 
 set SHAPES(0) {15}
 set SHAPES(1) {2 7 2}
@@ -71,7 +61,6 @@ proc do_game {gridref jets nrocks ji si} {
             set jet [string index $jets $ji]
             # set jet... future radio?
             if {[string equal [string index $jets $ji] >]} {
-                #puts "right"
                 set can_go 1
                 for {set j 0} {$j < [llength $shape]} {incr j} {
                     if {64 & [expr [lindex $shape $j] << $ci]} {
@@ -79,14 +68,11 @@ proc do_game {gridref jets nrocks ji si} {
                     }
                 }
                 if {$can_go && ![collides grid $shape $ri [expr $ci + 1]]} {
-                    #puts "    (went right)"
                     incr ci
                 }
             } else {
-                #puts "left"
                 set can_go [expr $ci > 0]
                 if {$can_go && ![collides grid $shape $ri [expr $ci - 1]]} {
-                    #puts "    (went left)"
                     set ci [expr $ci - 1]
                 }
             }
@@ -105,13 +91,27 @@ proc do_game {gridref jets nrocks ji si} {
     return "$ji $si"
 }
 
+proc find_cycle {gridref jets} {
+    upvar $gridref grid
+    set cycle_start 1234
+    set cycle_end $cycle_start
+    # prime the grid
+    set res [do_game grid $jets $cycle_start 0 0]
+    while {![info exists seen($res)]} {
+        set seen($res) 1
+        incr cycle_end
+        set res [do_game grid $jets 1 [lindex $res 0] [lindex $res 1]]
+    }
+    return "$cycle_start $cycle_end $res"
+}
+
 proc putgrid {gridref} {
     upvar $gridref grid
     for {set r -3} {$r + 1 <= [array size grid]} {incr r} {
         if {[info exists grid([expr [array size grid] - $r - 1])]} {
-            puts [format "%02x" $grid([expr [array size grid] - $r - 1])]
+            puts [format %02x $grid([expr [array size grid] - $r - 1])]
         } else {
-            puts "00"
+            puts 00
         }
     }
 }
@@ -123,21 +123,22 @@ puts [expr [array size grid] - 1]
 unset grid
 
 # part 2
-# (Assume length of jets is prime)
-# TODO
-#set cycle_indices [find_cycle $jets]
-#set offset [expr  [lindex $cycle_indices 0]
-#set cycle_length  [expr [lindex $cycle_indices 1] - $offset]
-set offset         1234
-set cycle_length   1715
-set num_rocks      [expr 1000000000000 - $offset]
-set total_cycles   [expr $num_rocks / $cycle_length]
-set extra_rocks    [expr $num_rocks % $cycle_length]
-
 set grid(0) 127
-set res [do_game grid $jets $offset 0 0]
+# find_cycle returns "$cycle_start $cycle_end $ji $si"
+# and mutates the grid
+# (Get ready to pollute the namespace...)
+set cycle_res    [find_cycle grid $jets]
+set offset       [lindex $cycle_res 0]
+set done_already [lindex $cycle_res 1]
+set last_ji      [lindex $cycle_res 2]
+set last_si      [lindex $cycle_res 3]
+set cycle_length [expr $done_already - $offset]
+set num_rocks    [expr 1000000000000 - $done_already]
+set total_cycles [expr $num_rocks / $cycle_length]
+set extra_rocks  [expr $num_rocks % $cycle_length]
+
 set initial_h [array size grid]
-set res [do_game grid $jets $cycle_length [lindex $res 0] [lindex $res 1]]
+set res [do_game grid $jets $cycle_length $last_ji $last_si]
 set cycle_h [expr [array size grid] - $initial_h]
 set res [do_game grid $jets $extra_rocks [lindex $res 0] [lindex $res 1]]
 # extra_h is the sum of cap and foundation heights
