@@ -195,9 +195,13 @@ Tcl's way of handling common string and array functions is another thing that I 
 Day 18: [Uiua](https://uiua.org)
 --------------------------------
 Uiua was a language I wanted to like, but the process of actually writing a program ended up being frustrating. The greatest annoyance was writing function applications in reverse order of many other languages; programs are read right-to-left, top-to-bottom. The author has been asked about this design choice enough times that its justification now has a dedicated web page. (It didn't lessen the annoyance.)
+
 An example: To evaluate `f(g(h(x)))`, another language might use something like `x.h().g().f()` (like Rust), or `(->> x h g f)` (like Clojure), or `x |> h |> g |> f` (like OCaML), or even just `X H G F` (like Forth). Uiua, by contrast, writes this as `f g h x`. The only other language that follows this sort of pattern is LISP, but that language's brackets make it easier to parse: `(f (g (h x)))`. I suppose I could have avoided this annoyance by writing each word on its own line, or perhaps writing a pre-processor that reversed the order of words on each line.
+
 Rather than learning the meaning of each glyph used by the language, I elected to spell out the name of each function with letters.
+
 > *"Get used to it, honey -- from now on, we'll be spelling *everything* with letters!" -- Homer Simpson*
+
 I suspect there is a neater way to write a lot of this program by using more combinators (e.g. fork, bracket, both).
 
 **Uiua**: the backward child of Forth and APL.
