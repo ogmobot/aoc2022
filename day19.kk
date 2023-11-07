@@ -5,6 +5,24 @@ val g-test-data = [
     "Blueprint 1: Each ore robot costs 4 ore. Each clay robot costs 2 ore. Each obsidian robot costs 3 ore and 14 clay. Each geode robot costs 2 ore and 7 obsidian.",
     "Blueprint 2: Each ore robot costs 2 ore. Each clay robot costs 3 ore. Each obsidian robot costs 3 ore and 8 clay. Each geode robot costs 3 ore and 12 obsidian."
 ]
+/*
+    Blueprint 1 should build *at most* 3 ore robots;
+                                      14 clay robots;
+                                       7 obsidian robots.
+        It ought to go thru states...
+            0.0.0.0|1.0.0.0 remaining=23
+            1.0.0.0|1.1.0.0 remaining=20
+            1.2.0.0|1.2.0.0 remaining=18
+            1.6.0.0|1.3.0.0 remaining=16
+            2.4.0.0|1.3.1.0 remaining=12
+            1.7.1.0|1.4.1.0 remaining=11
+            1.5.4.0|1.4.2.0 remaining=8
+            2.17.3.0|1.4.2.1 remaining=5
+            3.29.2.3|1.4.2.2 remaining=2
+    Blueprint 2 should build *at most* 3 ore robots;
+                                       8 clay robots;
+                                      12 obsidian robots.
+*/
 val g-big-number = 999999
 
 // TODO: convert these to arrays of four elements each?
@@ -21,10 +39,14 @@ struct blueprint
     geo-robot : reqs
 
 struct state
-    ore : int ; d-ore : int ;
-    cla : int ; d-cla : int ;
-    obs : int ; d-obs : int ;
-    geo : int ; d-geo : int ;
+    ore : int ;
+    cla : int ;
+    obs : int ;
+    geo : int ;
+    d-ore : int ;
+    d-cla : int ;
+    d-obs : int ;
+    d-geo : int ;
 
 // Parsing
 fun parse-it( s : maybe<string> ) : int
@@ -89,24 +111,23 @@ fun build-state(
 fun worth-building(bp : blueprint , initial-state : state, resource : int)
     // Don't build an ore robot if you already have enough ore per minute
     // to build whatever you want
+    var res : bool := False
     match resource
-        0 -> (
-            // ore is used for every robot
-            initial-state.d-ore < bp.ore-robot.ore
+        // ore is used for every robot
+        0 -> res := (initial-state.d-ore < bp.ore-robot.ore
          && initial-state.d-ore < bp.cla-robot.ore
          && initial-state.d-ore < bp.obs-robot.ore
          && initial-state.d-ore < bp.geo-robot.ore
         )
-        1 -> (
-            // clay is used only for obsidian robots
-            initial-state.d-cla < bp.obs-robot.ore
-        )
-        2 -> (
-            // obsidian is used only for geode robots
-            initial-state.d-cla < bp.geo-robot.ore
-        )
-        3 -> True
-    return True
+        // clay is used only for obsidian robots
+        1 -> res := (initial-state.d-cla < bp.obs-robot.cla)
+        // obsidian is used only for geode robots
+        2 -> res := (initial-state.d-obs < bp.geo-robot.obs)
+        3 -> res := True
+    return res
+
+fun continuous-production(bp : blueprint, st : state)
+    return st.d-ore >= bp.geo-robot.ore && st.d-obs >= bp.geo-robot.obs
 
 fun best-geodes(
     bp : blueprint ,
@@ -116,9 +137,32 @@ fun best-geodes(
     // Wonder if we can just DFS this...
     if remaining-time < 0 then
         return -1
+    
+    print("best-geodes with initialstate as ")
+    print(initial-state.ore) ; print(".") ;
+    print(initial-state.cla) ; print(".") ;
+    print(initial-state.obs) ; print(".") ;
+    print(initial-state.geo) ; print("|") ;
+    print(initial-state.d-ore) ; print(".") ;
+    print(initial-state.d-cla) ; print(".") ;
+    print(initial-state.d-obs) ; print(".") ;
+    print(initial-state.d-geo) ;
+    print(" remaining=") ; println(remaining-time)
+    
+    if continuous-production(bp, initial-state) then
+        // Enough resources to build a geode robot every minute
+        // TODO triangular numbers formula?
+        return max(
+            initial-state.geo,
+            best-geodes(
+                bp,
+                build-state(bp, initial-state, 3, 0),
+                remaining-time - 1
+            )
+        )
     Cons(
-        initial-state.geo,
-        [0, 1, 2, 3].filter-map(fn(i)
+        initial-state.geo + (remaining-time * initial-state.d-geo),
+        [3, 2, 1, 0].filter-map(fn(i)
             if worth-building(bp, initial-state, i) then
                 val t = get-time-req(bp, initial-state, i)
                 if t != g-big-number then
@@ -138,11 +182,17 @@ fun main()
     val blueprints = input_lines.filter-map( fn(s)
         if (s == "") then Nothing else Just(str-to-blueprint(s))
     )
-    blueprints.map(fn(x) println(x.ore-robot.ore))
-    blueprints.map(fn(x) println(best-geodes(
-        x,
-        State(0, 0, 0, 0,
-              1, 0, 0, 0),
-        23
-    )))
+    println(
+        zipwith(blueprints, list(1, length(blueprints)), fn(x, i)
+            print("Testing blueprint ") ; println(i)
+            val res = best-geodes(
+                x,
+                State(0, 0, 0, 0,
+                      1, 0, 0, 0),
+                24
+            )
+            println(res)
+            return res * i
+        ).sum
+    )
     return ()
