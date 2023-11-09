@@ -84,10 +84,12 @@ fun build-state(
         1 -> bp.cla-robot
         2 -> bp.obs-robot
         3 -> bp.geo-robot
-    // This triggers a compiler error...
+    // This looks weird, but putting the expressions for a and b into
+    // the constructor triggers a compiler error (v2.4.2)
+    val a = initial-state.ore + (initial-state.d-ore * (d-t + 1)) - rqs.ore
+    val b = initial-state.cla + (initial-state.d-cla * (d-t + 1)) - rqs.cla
     return State(
-        initial-state.ore + (initial-state.d-ore * (d-t + 1)) - rqs.ore,
-        initial-state.cla + (initial-state.d-cla * (d-t + 1)) - rqs.cla,
+        a, b,
         initial-state.obs + (initial-state.d-obs * (d-t + 1)) - rqs.obs,
         initial-state.geo + (initial-state.d-geo * (d-t + 1)) - rqs.geo,
 
@@ -137,8 +139,24 @@ fun best-geodes(
     // If (you have less time left than geode-min-t-left[n+1] left),
     //      abandon this path.
     val geo-min-t-left = ref(vector(256, 0).vlist) // Optimistic perhaps
+    //while { (!search-front).length < 5 } {
     while { (!search-front).length > 0 } {
+        //println((!search-front).length)
         val current = (!search-front).head.default(initial-state)
+
+        /*
+        print(current.ore) ; print(".")
+        print(current.cla) ; print(".")
+        print(current.obs) ; print(".")
+        print(current.geo) ; print("|")
+        print(current.d-ore) ; print(".")
+        print(current.d-cla) ; print(".")
+        print(current.d-obs) ; print(".")
+        print(current.d-geo)
+        print(" t=") ; println(current.time-left)
+        */
+        //print("  best=") ; println(!best)
+
         search-front := (!search-front).tail
         if current.time-left >= 0 then
 
@@ -161,9 +179,9 @@ fun best-geodes(
                             val t = get-time-req(bp, current, i)
                             if t != g-big-number then
                                 return Just(
-                                    build-state(bp, initial-state, i, t)
+                                    build-state(bp, current, i, t)
                                 )
-                        // else
+                        //else
                         return Nothing
                     )
                 ) ++ (!search-front)
@@ -179,10 +197,10 @@ fun main()
     //val input_lines = g-test-data
     val blueprints = input_lines.filter-map(str-to-blueprint)
     // Part 1
-    // Takes ~45 seconds (with -O3)
+    // Takes ~20 seconds (with -O3)
     println(
         zipwith(blueprints, list(1, length(blueprints)), fn(bp, i)
-            print("Testing blueprint ") ; print(i) ; print(" -> ")
+            print("Testing blueprint ") ; println(i) ; print(" -> ")
             val res = best-geodes(
                 bp,
                 State(0, 0, 0, 0,
@@ -194,7 +212,7 @@ fun main()
         ).sum
     )
     // Part 2
-    /*
+    // Takes ~70 seconds (with -O3)
     println(
         zipwith(blueprints, list(1, 3), fn(bp, i)
             print("Testing blueprint ") ; print(i) ; print(" => ")
@@ -202,12 +220,11 @@ fun main()
                 bp,
                 State(0, 0, 0, 0,
                       1, 0, 0, 0,
-                      32),
+                      32)
             )
             println(res)
             return res
         ).foldl(1, (*))
     )
-    */
     return ()
 
