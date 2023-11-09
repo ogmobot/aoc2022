@@ -208,11 +208,21 @@ I suspect there is a neater way to write a lot of this program by using more com
 
 **Syntax Highlight**: `⊃` (or `fork` -- applies two different functions to the same argument)
 
+Day 19: Koka
+------------
+Koka, like Scala, is a language that seems like a collage of good ideas. Immutable data structures with sugary-sweet syntax for "altering" them (i.e. making a copy with changed values), first-class functions, pattern matching, brace and semicolon elision... I like the language.
+
+That said, it's not all sunshine and daisies. The insistence of the language on identifiers starting with lowercase letters meant that I couldn't name global constants in all uppercase. The by-default immutability of data makes it a real pain to deal with data you *do* want to mutate. The language is still a work-in-progress, so one of the issues I had to contend with was *compiler bugs*. When the language matures, I think it'll be very comfy.
+
+**Koka**: it'll be good one day!
+
+**Syntax Highlight**: `node( data = 0 )` (creates a copy of `node`, but with the `data` field changed to `0`)
+
 Day 25: Scratch
 ---------------
 (I did this one out-of-order, between days 16 and 17.) Scratch is a great language -- for learning -- but it has its flaws. For instance, subroutines don't return values. There's probably some actor-based message-sending workaround, but I just had the subroutines modify global variables. I read somewhere that the language was to some extent inspired by LISP (mostly via Smalltalk). After setting up the arithmetic in this program, and always selecting the operator first, I can see some of that influence. I was also happy to learn that the language supports recursion, another rather LISPy idea.
 
-Rather than provide the `.sb3` save file, I've provided a `.png` image of the code and a `.scratchblocks` textual representation. Scratch can't load external files, so to load the problem's input, first create a list variable named text_input; then right-click on that variable, select "Import", and navigate to the input file. This loads the file line-by-line into the list variable. The file `day25-example.png` shows an example of what the list looks like once loaded into Scratch.
+Rather than provide the `.sb3` save file, I've provided a `.png` image of the code and a `.scratchblocks` textual representation. Scratch can't load external files, so to load the problem's input, first create a list variable named `text_input`; then right-click on that variable, select "Import", and navigate to the input file. This loads the file line-by-line into the list variable. The file `day25-example.png` shows an example of what the list looks like once loaded into Scratch.
 
 **Scratch**: it may be for kids, but you can [run Linux on top of it](https://scratch.mit.edu/users/bilman66/)!
 
