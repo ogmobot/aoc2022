@@ -19,9 +19,13 @@ val g-test-data = [
             1.5.4.0|1.4.2.0 remaining=8
             2.17.3.0|1.4.2.1 remaining=5
             3.29.2.3|1.4.2.2 remaining=2
+        ... and produce 9 geodes after 24 minutes.
+        It should produce 56 geodes after 32 minutes.
     Blueprint 2 should build *at most* 3 ore robots;
                                        8 clay robots;
                                       12 obsidian robots.
+        It should produce 12 geodes after 24 minutes.
+        It should produce 62 geodes after 32 minutes.
 */
 val g-big-number = 999999
 
@@ -54,14 +58,17 @@ fun parse-it( s : maybe<string> ) : int
 
 fun str-to-blueprint( s : string )
     val words = split(s, " ")
-    return Blueprint(
-        ore-robot = Reqs(words[6].parse-it, 0, 0, 0),
-        cla-robot = Reqs(words[12].parse-it, 0, 0, 0),
-        obs-robot = Reqs(words[18].parse-it, words[21].parse-it, 0, 0),
-        geo-robot = Reqs(words[27].parse-it, 0, words[30].parse-it, 0)
-    )
+    if words.length == 32 then
+        return Just(Blueprint(
+            ore-robot = Reqs(words[6].parse-it, 0, 0, 0),
+            cla-robot = Reqs(words[12].parse-it, 0, 0, 0),
+            obs-robot = Reqs(words[18].parse-it, words[21].parse-it, 0, 0),
+            geo-robot = Reqs(words[27].parse-it, 0, words[30].parse-it, 0)
+        ))
+    else
+        return Nothing
 
-// Main
+// Searching
 fun figure-time(reqd : int, stockd : int, prod : int)
     val amount = reqd - stockd
     if amount <= 0 then
@@ -115,9 +122,9 @@ fun worth-building(bp : blueprint , initial-state : state, resource : int)
     match resource
         // ore is used for every robot
         0 -> res := (initial-state.d-ore < bp.ore-robot.ore
-         && initial-state.d-ore < bp.cla-robot.ore
-         && initial-state.d-ore < bp.obs-robot.ore
-         && initial-state.d-ore < bp.geo-robot.ore
+         || initial-state.d-ore < bp.cla-robot.ore
+         || initial-state.d-ore < bp.obs-robot.ore
+         || initial-state.d-ore < bp.geo-robot.ore
         )
         // clay is used only for obsidian robots
         1 -> res := (initial-state.d-cla < bp.obs-robot.cla)
@@ -137,8 +144,8 @@ fun best-geodes(
     // Wonder if we can just DFS this...
     if remaining-time < 0 then
         return -1
-    
-    print("best-geodes with initialstate as ")
+    /*
+    print("initial-state is ")
     print(initial-state.ore) ; print(".") ;
     print(initial-state.cla) ; print(".") ;
     print(initial-state.obs) ; print(".") ;
@@ -148,21 +155,26 @@ fun best-geodes(
     print(initial-state.d-obs) ; print(".") ;
     print(initial-state.d-geo) ;
     print(" remaining=") ; println(remaining-time)
-    
+    */
     if continuous-production(bp, initial-state) then
         // Enough resources to build a geode robot every minute
         // TODO triangular numbers formula?
-        return max(
-            initial-state.geo,
-            best-geodes(
-                bp,
-                build-state(bp, initial-state, 3, 0),
-                remaining-time - 1
-            )
+        return (
+            initial-state.geo
+            + (remaining-time * initial-state.d-geo)
+            + (remaining-time * (remaining-time - 1) / 2)
         )
+        //return max(
+            //initial-state.geo,
+            //best-geodes(
+                //bp,
+                //build-state(bp, initial-state, 3, 0),
+                //remaining-time - 1
+            //)
+        //)
     Cons(
         initial-state.geo + (remaining-time * initial-state.d-geo),
-        [3, 2, 1, 0].filter-map(fn(i)
+        [0, 1, 2, 3].filter-map(fn(i)
             if worth-building(bp, initial-state, i) then
                 val t = get-time-req(bp, initial-state, i)
                 if t != g-big-number then
@@ -176,23 +188,42 @@ fun best-geodes(
         )
     ).maximum
 
+// Main
 fun main()
-    //val input_lines = read-text-file(path("input19.txt")).lines
-    val input_lines = g-test-data
-    val blueprints = input_lines.filter-map( fn(s)
-        if (s == "") then Nothing else Just(str-to-blueprint(s))
-    )
+    val input_lines = read-text-file(path("input19.txt")).lines
+    //val input_lines = g-test-data
+    val blueprints = input_lines.filter-map(str-to-blueprint)
+    // Part 1
+    // Takes ~45 seconds (with -O3)
+    /*
     println(
-        zipwith(blueprints, list(1, length(blueprints)), fn(x, i)
-            print("Testing blueprint ") ; println(i)
+        zipwith(blueprints, list(1, length(blueprints)), fn(bp, i)
+            //print("Testing blueprint ") ; print(i) ; print(" -> ")
             val res = best-geodes(
-                x,
+                bp,
                 State(0, 0, 0, 0,
                       1, 0, 0, 0),
                 24
             )
-            println(res)
+            //println(res)
             return res * i
         ).sum
     )
+    */
+    // Part 2
+    // Takes >20 minutes (with -O3)
+    println(
+        zipwith(blueprints, list(1, 3), fn(bp, i)
+            print("Testing blueprint ") ; print(i) ; print(" => ")
+            val res = best-geodes(
+                bp,
+                State(0, 0, 0, 0,
+                      1, 0, 0, 0),
+                32
+            )
+            println(res)
+            return res
+        ).foldl(1, (*))
+    )
     return ()
+
