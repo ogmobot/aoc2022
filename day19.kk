@@ -5,28 +5,7 @@ val g-test-data = [
     "Blueprint 1: Each ore robot costs 4 ore. Each clay robot costs 2 ore. Each obsidian robot costs 3 ore and 14 clay. Each geode robot costs 2 ore and 7 obsidian.",
     "Blueprint 2: Each ore robot costs 2 ore. Each clay robot costs 3 ore. Each obsidian robot costs 3 ore and 8 clay. Each geode robot costs 3 ore and 12 obsidian."
 ]
-/*
-    Blueprint 1 should build *at most* 3 ore robots;
-                                      14 clay robots;
-                                       7 obsidian robots.
-        It ought to go thru states...
-            0.0.0.0|1.0.0.0 remaining=23
-            1.0.0.0|1.1.0.0 remaining=20
-            1.2.0.0|1.2.0.0 remaining=18
-            1.6.0.0|1.3.0.0 remaining=16
-            2.4.0.0|1.3.1.0 remaining=12
-            1.7.1.0|1.4.1.0 remaining=11
-            1.5.4.0|1.4.2.0 remaining=8
-            2.17.3.0|1.4.2.1 remaining=5
-            3.29.2.3|1.4.2.2 remaining=2
-        ... and produce 9 geodes after 24 minutes.
-        It should produce 56 geodes after 32 minutes.
-    Blueprint 2 should build *at most* 3 ore robots;
-                                       8 clay robots;
-                                      12 obsidian robots.
-        It should produce 12 geodes after 24 minutes.
-        It should produce 62 geodes after 32 minutes.
-*/
+
 val g-big-number = 999999
 
 // TODO: convert these to arrays of four elements each?
@@ -51,6 +30,7 @@ struct state
     d-cla : int ;
     d-obs : int ;
     d-geo : int ;
+    time-left : int;
 
 // Parsing
 fun parse-it( s : maybe<string> ) : int
@@ -91,6 +71,7 @@ fun get-time-req(bp : blueprint, st : state , resource : int)
         figure-time(rqs.geo, st.geo, st.d-geo),
     ].maximum
 
+// build-state... is this nation-building?
 fun build-state(
     bp : blueprint ,
     initial-state : state ,
@@ -103,6 +84,7 @@ fun build-state(
         1 -> bp.cla-robot
         2 -> bp.obs-robot
         3 -> bp.geo-robot
+    // This triggers a compiler error...
     return State(
         initial-state.ore + (initial-state.d-ore * (d-t + 1)) - rqs.ore,
         initial-state.cla + (initial-state.d-cla * (d-t + 1)) - rqs.cla,
@@ -112,7 +94,9 @@ fun build-state(
         initial-state.d-ore + int(resource == 0),
         initial-state.d-cla + int(resource == 1),
         initial-state.d-obs + int(resource == 2),
-        initial-state.d-geo + int(resource == 3)
+        initial-state.d-geo + int(resource == 3),
+
+        initial-state.time-left - d-t - 1
     )
 
 fun worth-building(bp : blueprint , initial-state : state, resource : int)
@@ -134,59 +118,60 @@ fun worth-building(bp : blueprint , initial-state : state, resource : int)
     return res
 
 fun continuous-production(bp : blueprint, st : state)
-    return st.d-ore >= bp.geo-robot.ore && st.d-obs >= bp.geo-robot.obs
+    return (
+           st.ore   >= bp.geo-robot.ore && st.obs   >= bp.geo-robot.obs
+        && st.d-ore >= bp.geo-robot.ore && st.d-obs >= bp.geo-robot.obs
+    )
 
 fun best-geodes(
     bp : blueprint ,
-    initial-state : state ,
-    remaining-time : int
+    initial-state : state
 )
     // Wonder if we can just DFS this...
-    if remaining-time < 0 then
-        return -1
-    /*
-    print("initial-state is ")
-    print(initial-state.ore) ; print(".") ;
-    print(initial-state.cla) ; print(".") ;
-    print(initial-state.obs) ; print(".") ;
-    print(initial-state.geo) ; print("|") ;
-    print(initial-state.d-ore) ; print(".") ;
-    print(initial-state.d-cla) ; print(".") ;
-    print(initial-state.d-obs) ; print(".") ;
-    print(initial-state.d-geo) ;
-    print(" remaining=") ; println(remaining-time)
-    */
-    if continuous-production(bp, initial-state) then
-        // Enough resources to build a geode robot every minute
-        // TODO triangular numbers formula?
-        return (
-            initial-state.geo
-            + (remaining-time * initial-state.d-geo)
-            + (remaining-time * (remaining-time - 1) / 2)
-        )
-        //return max(
-            //initial-state.geo,
-            //best-geodes(
-                //bp,
-                //build-state(bp, initial-state, 3, 0),
-                //remaining-time - 1
-            //)
-        //)
-    Cons(
-        initial-state.geo + (remaining-time * initial-state.d-geo),
-        [0, 1, 2, 3].filter-map(fn(i)
-            if worth-building(bp, initial-state, i) then
-                val t = get-time-req(bp, initial-state, i)
-                if t != g-big-number then
-                    return Just(best-geodes(
-                        bp,
-                        build-state(bp, initial-state, i, t),
-                        remaining-time - t - 1
-                    ))
+    // Edit: afraid it's not that simple.
+
+    val best = ref(0)
+    val search-front = ref([initial-state])
+    // Geode-robot minimum remaining time:
+    // Let n be the number of geode-robots in a state with time t.
+    // If (you have less time left than geode-min-t-left[n+1] left),
+    //      abandon this path.
+    val geo-min-t-left = ref(vector(256, 0).vlist) // Optimistic perhaps
+    while { (!search-front).length > 0 } {
+        val current = (!search-front).head.default(initial-state)
+        search-front := (!search-front).tail
+        if current.time-left >= 0 then
+
+            if current.geo > !best then
+                best := current.geo
+
+            val limit = (!geo-min-t-left)[current.d-geo + 1].mbint
+            if current.time-left >= limit then
+                if current.time-left > (!geo-min-t-left)[current.d-geo].mbint then
+                    // Scuffed assignment to list index
+                    geo-min-t-left := (
+                        (!geo-min-t-left).take(current.d-geo)
+                        ++ [current.time-left]
+                        ++ (!geo-min-t-left).drop(current.d-geo + 1)
+                    )
+
+                search-front := (
+                    [3, 2, 1, 0].filter-map(fn(i)
+                        if worth-building(bp, current, i) then
+                            val t = get-time-req(bp, current, i)
+                            if t != g-big-number then
+                                return Just(
+                                    build-state(bp, initial-state, i, t)
+                                )
+                        // else
+                        return Nothing
+                    )
+                ) ++ (!search-front)
+
             // else
-            return Nothing
-        )
-    ).maximum
+            // (abandon this path)
+    }
+    return !best
 
 // Main
 fun main()
@@ -195,35 +180,34 @@ fun main()
     val blueprints = input_lines.filter-map(str-to-blueprint)
     // Part 1
     // Takes ~45 seconds (with -O3)
-    /*
     println(
         zipwith(blueprints, list(1, length(blueprints)), fn(bp, i)
-            //print("Testing blueprint ") ; print(i) ; print(" -> ")
+            print("Testing blueprint ") ; print(i) ; print(" -> ")
             val res = best-geodes(
                 bp,
                 State(0, 0, 0, 0,
-                      1, 0, 0, 0),
-                24
+                      1, 0, 0, 0,
+                      24)
             )
-            //println(res)
+            println(res)
             return res * i
         ).sum
     )
-    */
     // Part 2
-    // Takes >20 minutes (with -O3)
+    /*
     println(
         zipwith(blueprints, list(1, 3), fn(bp, i)
             print("Testing blueprint ") ; print(i) ; print(" => ")
             val res = best-geodes(
                 bp,
                 State(0, 0, 0, 0,
-                      1, 0, 0, 0),
-                32
+                      1, 0, 0, 0,
+                      32),
             )
             println(res)
             return res
         ).foldl(1, (*))
     )
+    */
     return ()
 
