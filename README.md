@@ -212,7 +212,7 @@ Day 19: Koka
 ------------
 Koka, like Scala, is a language that seems like a collage of good ideas. Immutable data structures with sugary-sweet syntax for "altering" them (i.e. making a copy with changed values), first-class functions, pattern matching, brace and semicolon elision... I like the language.
 
-That said, it's not all sunshine and daisies. The insistence of the language on identifiers starting with lowercase letters meant that I couldn't name global constants in all uppercase. The by-default immutability of data makes it a real pain to deal with data you *do* want to mutate. The language is still a work-in-progress, so one of the issues I had to contend with was *compiler bugs*. When the language matures, I think it'll be very comfy.
+That said, it's not all sunshine and daisies. The insistence of the language on identifiers starting with lowercase letters meant that I couldn't name global constants in all uppercase. The by-default immutability of data makes it a real pain to deal with data you *do* want to mutate. The language is still a work-in-progress, so the standard library is practically non-existent and one of the issues I had to contend with was *compiler bugs*. When the language matures, I think it'll be very comfy.
 
 **Koka**: it'll be good one day!
 
