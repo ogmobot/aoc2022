@@ -139,23 +139,8 @@ fun best-geodes(
     // If (you have less time left than geode-min-t-left[n+1] left),
     //      abandon this path.
     val geo-min-t-left = ref(vector(256, 0).vlist) // Optimistic perhaps
-    //while { (!search-front).length < 5 } {
     while { (!search-front).length > 0 } {
-        //println((!search-front).length)
         val current = (!search-front).head.default(initial-state)
-
-        /*
-        print(current.ore) ; print(".")
-        print(current.cla) ; print(".")
-        print(current.obs) ; print(".")
-        print(current.geo) ; print("|")
-        print(current.d-ore) ; print(".")
-        print(current.d-cla) ; print(".")
-        print(current.d-obs) ; print(".")
-        print(current.d-geo)
-        print(" t=") ; println(current.time-left)
-        */
-        //print("  best=") ; println(!best)
 
         search-front := (!search-front).tail
         if current.time-left >= 0 then
