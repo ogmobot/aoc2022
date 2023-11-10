@@ -218,6 +218,18 @@ That said, it's not all sunshine and daisies. The insistence of the language on 
 
 **Syntax Highlight**: `node( data = 0 )` (creates a copy of `node`, but with the `data` field changed to `0`)
 
+Day 20: BASIC
+-------------
+(Specifically, this is the *FreeBASIC* implementation of the language.) Wow, it's been a long time since I wrote anything in this language. For a language designed to be easy for beginners, it feels very... is "low-level" the term I'm looking for? Parameters can be passed by reference or by value, you have control over alignment of bytes within a user-defined structure, variables must be declared before they're used, etc.
+
+There are a lot of idiosyncrasies to the language that seem to have been (almost) "evolutionary dead-ends". `Rem` for comments (or the alternative `'`, which I used here); `Next i` to proceed to the next iteration of a `For` loop; the use of English-language words to define ranges and types (`1 To 10`, `x As Integer`). Amusingly -- but not entirely unexpectedly -- every one of these unusual choices are present in the "generic pseudo-code" being used in the high school syllabus I'm currently teaching. I'm glad the syllabus is finally being updated next year.
+
+Aspects of BASIC are not entirely absent from modern languages. I'm pretty sure some languages still define ranges with `1 to 10` (although `1..10` seems to be a more popular choice); others distinguish between subroutines and functions (although it tends to be a distinction between whether or not the process has side-effects, rather than whether it has a return value); the J language denotes comments with `NB.` rather than non-alphanmueric characters. Plus, I Think I've Learned Where C# Learned Its Capitalisation Habit From.
+
+**BASIC**: living proof that the definition of "high-level language" drifts over time.
+
+**Syntax Highlight**: `Next` (jumps to the start of the loop body and increments the loop variable -- usually used to conclude a `For` loop)
+
 Day 25: Scratch
 ---------------
 (I did this one out-of-order, between days 16 and 17.) Scratch is a great language -- for learning -- but it has its flaws. For instance, subroutines don't return values. There's probably some actor-based message-sending workaround, but I just had the subroutines modify global variables. I read somewhere that the language was to some extent inspired by LISP (mostly via Smalltalk). After setting up the arithmetic in this program, and always selecting the operator first, I can see some of that influence. I was also happy to learn that the language supports recursion, another rather LISPy idea.
