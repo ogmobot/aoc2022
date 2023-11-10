@@ -18,6 +18,7 @@ Const globalListLength = 5000
 Const fileName = "input20.txt"
 'Const globalListLength = 7
 'Const fileName = "input20.test"
+Const encryption = 811589153
 
 ' Input functions
 Sub populateInputLists
@@ -28,7 +29,7 @@ Sub populateInputLists
     For i As Integer = 1 To globalListLength
         Line Input #1, s
         inputListP1(i).value = Vallng(s)
-        inputListP2(i).value = Vallng(s) * 811589153
+        inputListP2(i).value = Vallng(s) * encryption
         inputListP1(i).nextn = i + 1
         inputListP2(i).nextn = i + 1
         inputListP1(i).prevn = i - 1
@@ -58,11 +59,8 @@ End Sub
 
 Sub mixOneNode( list() As ListNode, index As Integer )
     'Print "Moving node with value " & list(index).value
-    Dim moveCount As Integer = list(index).value Mod globalListLength
-    If moveCount < 0 Then moveCount = moveCount + globalListLength End If
-    If list(index).value < 0 Then moveCount = moveCount - 1 End If
-
-    extractIndex list(), index
+    Dim moveCount As Integer = list(index).value Mod (globalListLength - 1)
+    If moveCount < 0 Then moveCount = moveCount + globalListLength - 1 End If
 
     Dim current As Integer = list(index).nextn
     'Dim current As Integer = index
@@ -70,9 +68,10 @@ Sub mixOneNode( list() As ListNode, index As Integer )
         current = list(current).nextn
     Next i
 
+    extractIndex list(), index
     insertJustBefore list(), index, current
 
-    Print "Moved " & list(index).value & " between " & list(list(index).prevn).value & " and " & list(list(index).nextn).value
+    'Print "Moved " & list(index).value & " between " & list(list(index).prevn).value & " and " & list(list(index).nextn).value
 End Sub
 
 ' Output Functions
@@ -92,7 +91,7 @@ Function groveSum( list() As ListNode ) as Integer<64>
         For i As Integer = 1 to 1000
             current = list(current).nextn
         Next i
-        Print "Grovesum += " & list(current).value
+        'Print "Grovesum += " & list(current).value
         res = res + list(current).value
     Next thousand
     Return res
@@ -100,17 +99,15 @@ End Function
 
 ' Main
 populateInputLists
+
 For i As Integer = 1 To globalListLength
     mixOneNode inputListP1(), i
-
-    'Print "Mixing " & inputListP1(i).value & "..."
-    'Print "== List Status =="
-    'Dim current As Integer = 1
-    'For tmp As Integer = 1 To 7
-        'Print inputListP1(current).value
-        'current = inputListP1(current).nextn
-    'Next tmp
 Next i
+Print groveSum(inputListP1())
 
-Dim res as Integer = groveSum(inputListP1())
-Print "Res=" & res
+For j As Integer = 1 to 10
+    For i As Integer = 1 To globalListLength
+        mixOneNode inputListP2(), i
+    Next i
+Next j
+Print groveSum(inputListP2())
