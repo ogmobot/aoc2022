@@ -16,8 +16,6 @@ Dim Shared inputListP1() As ListNode
 Dim Shared inputListP2() As ListNode
 Const globalListLength = 5000
 Const fileName = "input20.txt"
-'Const globalListLength = 7
-'Const fileName = "input20.test"
 Const encryption = 811589153
 
 ' Input functions
@@ -58,20 +56,16 @@ Sub insertJustBefore( list() as ListNode, src as Integer, dest As Integer )
 End Sub
 
 Sub mixOneNode( list() As ListNode, index As Integer )
-    'Print "Moving node with value " & list(index).value
     Dim moveCount As Integer = list(index).value Mod (globalListLength - 1)
     If moveCount < 0 Then moveCount = moveCount + globalListLength - 1 End If
 
     Dim current As Integer = list(index).nextn
-    'Dim current As Integer = index
     For i As Integer = 1 To moveCount
         current = list(current).nextn
     Next i
 
     extractIndex list(), index
     insertJustBefore list(), index, current
-
-    'Print "Moved " & list(index).value & " between " & list(list(index).prevn).value & " and " & list(list(index).nextn).value
 End Sub
 
 ' Output Functions
@@ -91,7 +85,6 @@ Function groveSum( list() As ListNode ) as Integer<64>
         For i As Integer = 1 to 1000
             current = list(current).nextn
         Next i
-        'Print "Grovesum += " & list(current).value
         res = res + list(current).value
     Next thousand
     Return res
