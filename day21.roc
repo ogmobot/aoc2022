@@ -118,15 +118,15 @@ newRoot = \d ->
 solve = \contents ->
     monkeys = Str.split (Str.trim contents) "\n"
         |> List.walk (Dict.empty {}) strToMonkey
-    p1res = evalMonkey "root" monkeys |> exprToInt
+    p1res = evalMonkey "root" monkeys |> exprToInt |> Num.toStr
 
     p2res = evalMonkey "root" (
         monkeys
             |> Dict.insert "root" (newRoot monkeys)
             |> Dict.insert "humn" UnknownMonkey
-    ) |> exprToInt
+    ) |> exprToInt |> Num.toStr
 
-    Str.joinWith [Num.toStr(p1res), Num.toStr(p2res)] "\n" |> Stdout.line
+    Stdout.line "\(p1res)\n\(p2res)"
 
 main =
     task =

@@ -230,6 +230,18 @@ Aspects of BASIC are not entirely absent from modern languages. I'm pretty sure 
 
 **Syntax Highlight**: `Next` (jumps to the start of the loop body and increments the loop variable -- usually used to conclude a `For` loop)
 
+Day 21: Roc
+-----------
+Another language with Haskell-like purity (and pedantry); another hour of fiddling with IO routines; and another program that operated correctly when it (at last) got off the ground. This language descends from Haskell via Elm.
+
+Roc certainly seems more different to Haskell than Idris. For instance, it's possible to run a Roc file even if warnings are present, and expressions seem to be evaluated eagerly (or perhaps that's just the `Task` module). The program's preamble is one of the strangest I've encountered: it specifies a platform for the program by naming a package file at a remote URL, then downloads files from that package at compile time. The modules imported in this program are `Task` (allows the program to produce effects), `File` (allows the program to open files), `Path` (converts a String to a Path, the only type of parameter the `File` module accepts) and `Stdout` (to write to standard output). Now, you might *think* that it would be easier to have the `File` module accept a String, rather than a Path that requires importing another module. And you'd be right. But requiring the `Path` module helps to ensure the code won't break on some other platform with different conventions for file paths, *I guess*.
+
+I over-used pattern matching in this solution. There's almost certainly a cleaner way of writing a lot of this code. But it works, so in this state it shall stay.
+
+**Roc**: what Haskell would be if it wasn't so lazy.
+
+**Syntax Highlight**: `app` (part of a program's opening Module Header -- this keyword specifies it's an application module)
+
 Day 25: Scratch
 ---------------
 (I did this one out-of-order, between days 16 and 17.) Scratch is a great language -- for learning -- but it has its flaws. For instance, subroutines don't return values. There's probably some actor-based message-sending workaround, but I just had the subroutines modify global variables. I read somewhere that the language was to some extent inspired by LISP (mostly via Smalltalk). After setting up the arithmetic in this program, and always selecting the operator first, I can see some of that influence. I was also happy to learn that the language supports recursion, another rather LISPy idea.
