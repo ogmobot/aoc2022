@@ -9,9 +9,16 @@ app "day21"
     provides [main] to pf
 
 Monkey : [
-    OpMonkey (I64, I64 -> I64) Str Str,
+    OpMonkey Str Str Str,
     AtomicMonkey I64,
+    SolverMonkey Str Str,
     UnknownMonkey
+]
+
+Expr : [
+    Atom I64,
+    Tree Str Expr Expr,
+    Unknown
 ]
 
 parseDefault : Str, I64 -> I64
@@ -20,15 +27,58 @@ parseDefault = \s, d ->
         Ok val -> val
         Err _  -> d
 
-evalMonkey : Str, (Dict Str Monkey) -> I64
+exprToInt : Expr -> I64
+exprToInt = \expr ->
+    when expr is
+        Atom val   -> val
+        Tree _ _ _ -> -1
+        Unknown    -> -1
+
+simplify : Str, Expr, Expr -> Expr
+simplify = \op, left, right ->
+    when left is
+        Atom l ->
+            when right is
+                Atom r -> Atom ((strToOp op) l r)
+                _      -> Tree op left right
+        _ -> Tree op left right
+
+solveEquation : Expr, Expr -> Expr
+solveEquation = \left, right ->
+    when left is
+        Atom _ ->
+            when right is
+                Atom _  -> Unknown
+                # left = a + b
+                Tree "+" (Atom a) b -> solveEquation b (simplify "-" left (Atom a))
+                Tree "+" a (Atom b) -> solveEquation a (simplify "-" left (Atom b))
+                # left = a - b
+                Tree "-" (Atom a) b -> solveEquation b (simplify "-" (Atom a) left)
+                Tree "-" a (Atom b) -> solveEquation a (simplify "+" left (Atom b))
+                # left = a * b
+                Tree "*" (Atom a) b -> solveEquation b (simplify "/" left (Atom a))
+                Tree "*" a (Atom b) -> solveEquation a (simplify "/" left (Atom b))
+                # left = a / b
+                Tree "/" (Atom a) b -> solveEquation b (simplify "/" (Atom a) left)
+                Tree "/" a (Atom b) -> solveEquation a (simplify "*" left (Atom b))
+                Tree _ _ _ -> Atom -1
+                Unknown -> left
+        Tree _ _ _ ->
+            when right is
+                Atom _ -> solveEquation right left
+                _ -> Unknown
+        Unknown -> right
+
+evalMonkey : Str, (Dict Str Monkey) -> Expr
 evalMonkey = \name, d ->
     when (Dict.get d name) is
         Ok monke ->
             when monke is
-                AtomicMonkey val -> val
-                OpMonkey op l r  -> op (evalMonkey l d) (evalMonkey r d)
-                UnknownMonkey    -> 0
-        Err _ -> -1
+                AtomicMonkey val -> Atom val
+                OpMonkey op l r  -> (simplify op (evalMonkey l d) (evalMonkey r d))
+                UnknownMonkey    -> Unknown
+                SolverMonkey l r -> solveEquation (evalMonkey l d) (evalMonkey r d)
+        Err _ -> Atom -1
 
 strToOp : Str -> (I64, I64 -> I64)
 strToOp = \opStr ->
@@ -50,15 +100,33 @@ strToMonkey = \d, s ->
         )
         [name, lt, op, rt] -> (Dict.insert d
             (Str.replaceEach name ":" "")
-            (OpMonkey (strToOp op) lt rt)
+            (OpMonkey op lt rt)
         )
         _ -> d
+
+newRoot : (Dict Str Monkey) -> Monkey
+newRoot = \d ->
+    backup = AtomicMonkey -1
+    root = Dict.get d "root"
+    when root is
+        Ok monke ->
+            when monke is
+                OpMonkey _ l r -> SolverMonkey l r
+                _ -> backup
+        Err _ -> backup
 
 solve = \contents ->
     monkeys = Str.split (Str.trim contents) "\n"
         |> List.walk (Dict.empty {}) strToMonkey
-    evalMonkey "root" monkeys
-        |> Num.toStr |> Stdout.line
+    p1res = evalMonkey "root" monkeys |> exprToInt
+
+    p2res = evalMonkey "root" (
+        monkeys
+            |> Dict.insert "root" (newRoot monkeys)
+            |> Dict.insert "humn" UnknownMonkey
+    ) |> exprToInt
+
+    Str.joinWith [Num.toStr(p1res), Num.toStr(p2res)] "\n" |> Stdout.line
 
 main =
     task =
