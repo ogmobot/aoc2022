@@ -30,10 +30,10 @@ def do_op(op, a, b):
         case "*", int(), int(): return a * b
         case "/", int(), int(): return a // b
         case "=", int(), int(): return a == b
-        case "=", int(), _____: return unwrap(a, b)
-        case "=", _____, int(): return unwrap(b, a)
-        case ___, int(), int(): raise ValueError(f"invalid op: '{op}'")
-        case ___, _____, _____: return [op, a, b]
+        case "=", int(), _    : return unwrap(a, b)
+        case "=", _    , int(): return unwrap(b, a)
+        case _  , int(), int(): raise ValueError(f"invalid op: '{op}'")
+        case _  , _    , _    : return [op, a, b]
 
 def do_reverse(op, result, b):
     match op:
