@@ -11,7 +11,7 @@ type parseResult = {
 
 let locationHash = (row, col, facing) => {
     // 0 = right, 1 = down, 2 = left, 3 = up
-    (1000 * row) + (4 * col) + facing;
+    (1000 * (row + 1)) + (4 * (col + 1)) + facing;
 };
 
 let turnright = (locHash) => {
@@ -30,7 +30,10 @@ let forwardOne = (row, col, facing) => {
     | 2 => (row, col - 1);
     | 3 => (row - 1, col);
     // impossible
-    | _ => (row, col);
+    | _ => {
+        Js.Console.log("Attempted to turn in invalid direction!");
+        (row, col);
+    };
     }
 };
 
@@ -57,8 +60,17 @@ let part1BlankCase = (lines, r, c, facing) => {
         resR := tmpR;
         resC := tmpC;
     };
-    (locationHash(r, c, facing),
-     locationHash(resR.contents, resC.contents, facing));
+    let (finalR, finalC) = forwardOne(resR.contents, resC.contents, facing);
+    switch lookup(lines, finalR, finalC) {
+    | '.' => (locationHash(r, c, facing),
+              locationHash(finalR, finalC, facing));
+    |  _  => (locationHash(r, c, facing),
+              locationHash(r, c, facing));
+    };
+};
+
+let part2BlankCase = (lines, r, c, facing) => {
+    // Oh boy, here we go...
 };
 
 let mazeMap = (lines, ruleForBlank) => {
@@ -120,13 +132,26 @@ let followInstructions = (mazeMap, instructions) => {
     let loc = ref(locationHash(0, c.contents, 0));
     Belt.List.forEach(instructions, (instr) => {
         switch instr {
-        | "R" => loc := turnright(loc.contents);
-        | "L" => loc := turnleft(loc.contents);
+        | "R" => {
+            loc := turnright(loc.contents);
+            //Js.Console.log("Turned R, arrived at " ++ Belt.Int.toString(loc.contents));
+        };
+        | "L" => {
+            loc := turnleft(loc.contents);
+            //Js.Console.log("Turned L, arrived at " ++ Belt.Int.toString(loc.contents));
+        };
         | x   => {
             let dist = Belt.Int.fromString(x) -> Js.Option.getWithDefault(0, _);
+            if dist == 0 {
+                Js.Console.log("Failed to parse integer!");
+            };
             for _ in 1 to dist {
                 loc := Belt.Map.Int.get(mazeMap, loc.contents) -> Js.Option.getWithDefault(0, _);
+                //if loc.contents == 0 {
+                    //Js.Console.log("Failed table lookup!");
+                //};
             };
+            //Js.Console.log("Moved " ++ Belt.Int.toString(dist) ++ ", arrived at " ++ Belt.Int.toString(loc.contents));
         };
         };
     });
@@ -134,13 +159,14 @@ let followInstructions = (mazeMap, instructions) => {
 };
 
 let parseInput = (bigString) => {
-    let lines = Js.String.split("\n", Js.String.trim(bigString));
+    // Last line is blank
+    let lines = Js.String.split("\n", bigString);
     let numLines = Array.length(lines);
-    let mazeLines = Belt.Array.slice(lines, ~offset = 0, ~len = (numLines - 1));
+    let mazeLines = Belt.Array.slice(lines, ~offset = 0, ~len = (numLines - 2));
     // return value
     {
         lines: mazeLines,
-        instr: lines[numLines - 1],
+        instr: lines[numLines - 2],
     };
 }
 
@@ -148,5 +174,3 @@ let theInput = parseInput(readFileSync(~name = "input22.txt", #utf8));
 let theInstructions = splitInstructions(theInput.instr);
 let p1Maze = mazeMap(theInput.lines, part1BlankCase);
 Js.Console.log(followInstructions(p1Maze, theInstructions));
-// Expected 30552
-// Got 36
