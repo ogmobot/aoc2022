@@ -14,6 +14,15 @@ let locationHash = (row, col, facing) => {
     (1000 * row) + (4 * col) + facing;
 };
 
+let turnright = (locHash) => {
+    let mod4 = mod(locHash, 4);
+    locHash - mod4 + mod(mod4 + 1, 4);
+};
+let turnleft = (locHash) => {
+    let mod4 = mod(locHash, 4);
+    locHash - mod4 + mod(mod4 + 3, 4);
+};
+
 let forwardOne = (row, col, facing) => {
     switch facing {
     | 0 => (row, col + 1);
@@ -81,33 +90,53 @@ let mazeMap = (lines, ruleForBlank) => {
     }) -> Belt.Array.concatMany(_) -> Belt.Map.Int.fromArray(_);
 };
 
-let splitInstructions = (longString) => array<string> {
-    let res = Js.Re.fromString("(\\[R|L|(1-9)*]\\)*") -> Js.Re.exec_(longString);
+let rec splitInstructions = (longString) => {
+    // There's probably a better way to do this!
+    let res = %re("/(R|L|\d+)/g") -> Js.Re.exec_(longString);
     switch res {
-    | Some(x) => x;
-    | None    => [];
+    | Some(x) => {
+        let captured = Js.Nullable.toOption(Js.Re.captures(x)[1]);
+        let element = Js.Option.getWithDefault("X", captured);
+        let remaining = Js.String2.substringToEnd(
+            longString,
+            ~from = Js.String.length(element)
+        );
+        Js.List.cons(
+            element,
+            splitInstructions(remaining)
+        );
+    }
+    | None => list{};
     };
 };
 
 let followInstructions = (mazeMap, instructions) => {
-    let r = ref(0);
     let c = ref(0);
-    let facing = ref(0);
     while !(mazeMap -> Belt.Map.Int.has(
-            locationHash(r.contents, c.contents, facing.contents)
+            locationHash(0, c.contents, 0)
     )) {
         c := c.contents + 1;
     }
-    for i in 0 to Array.length(instructions) - 1 {
-        // Must do this in order, hence `for` instead of `map`
-        Js.Console.log(instructions[i]);
-    }
+    let loc = ref(locationHash(0, c.contents, 0));
+    Belt.List.forEach(instructions, (instr) => {
+        switch instr {
+        | "R" => loc := turnright(loc.contents);
+        | "L" => loc := turnleft(loc.contents);
+        | x   => {
+            let dist = Belt.Int.fromString(x) -> Js.Option.getWithDefault(0, _);
+            for _ in 1 to dist {
+                loc := Belt.Map.Int.get(mazeMap, loc.contents) -> Js.Option.getWithDefault(0, _);
+            };
+        };
+        };
+    });
+    loc.contents;
 };
 
 let parseInput = (bigString) => {
     let lines = Js.String.split("\n", Js.String.trim(bigString));
     let numLines = Array.length(lines);
-    let mazeLines = Belt.Array.slice(lines, ~offset=0, ~len=(numLines - 1));
+    let mazeLines = Belt.Array.slice(lines, ~offset = 0, ~len = (numLines - 1));
     // return value
     {
         lines: mazeLines,
@@ -115,8 +144,9 @@ let parseInput = (bigString) => {
     };
 }
 
-let theInput = parseInput(readFileSync(~name="input22.txt", #utf8));
+let theInput = parseInput(readFileSync(~name = "input22.txt", #utf8));
 let theInstructions = splitInstructions(theInput.instr);
-//let p1Maze = mazeMap(theInput.lines, p1BlankCase);
-//followInstructions(p1Maze, theInstructions);
-Js.Console.log(theInstructions);
+let p1Maze = mazeMap(theInput.lines, part1BlankCase);
+Js.Console.log(followInstructions(p1Maze, theInstructions));
+// Expected 30552
+// Got 36
