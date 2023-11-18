@@ -242,6 +242,16 @@ I over-used pattern matching in this solution. There's almost certainly a cleane
 
 **Syntax Highlight**: `app` (part of a program's opening Module Header -- this keyword specifies it's an application module)
 
+Day 22: ReScript
+----------------
+You've heard of the "better C" languages, now get ready for another "better JavaScript" language. In many ways, ReScript is what I wanted TypeScript to be. It infers and then strictly reinforces the types of data used in the program to ensure things don't get out of hand. (TypeScript, by contrast, requires the programmer to annotate types, and doesn't reinforce anything that's not annotated.) The language's `getWithDefault`, used to unwrap optional types, seemed a little verbose to me; but on the whole, the language seems pretty solid. If I had to develop an actual program in JavaScript, I think this would be my preferred way to do it.
+
+I solved the problem in a quite different way to the Python program. Rather than keeping track of row, column and direction, I set up a mapping that indicated where each possible coordinate/facing would land after moving forward a single step. The function that carried out this task accepted an auxiliary function as a parameter which handled attempting to move off the grid. I think this made the ReScript solution a bit neater. That said, I still hard-coded each edge connection for part 2 to "fold" the cube together. I doubt I'll ever revisit this to make a general cube-folding algorithm.
+
+**ReScript**: the best way to write solid JavaScript.
+
+**Syntax Highlight**: ` ` (there's no `return` keyword -- the result of a function is the value of the last expression within it)
+
 Day 25: Scratch
 ---------------
 (I did this one out-of-order, between days 16 and 17.) Scratch is a great language -- for learning -- but it has its flaws. For instance, subroutines don't return values. There's probably some actor-based message-sending workaround, but I just had the subroutines modify global variables. I read somewhere that the language was to some extent inspired by LISP (mostly via Smalltalk). After setting up the arithmetic in this program, and always selecting the operator first, I can see some of that influence. I was also happy to learn that the language supports recursion, another rather LISPy idea.
