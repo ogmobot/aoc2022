@@ -215,7 +215,7 @@ let rec splitInstructions = (longString) => {
     switch res {
     | Some(x) => {
         let captured = Js.Nullable.toOption(Js.Re.captures(x)[1]);
-        let element = Js.Option.getWithDefault("X", captured);
+        let element = captured -> Belt.Option.getWithDefault("X");
         let remaining = Js.String2.substringToEnd(
             longString,
             ~from = Js.String.length(element)
@@ -236,33 +236,27 @@ let followInstructions = (mazeMap, instructions) => {
     )) {
         c := c.contents + 1;
     }
-    let loc = ref(locationHash(0, c.contents, 0));
-    Belt.List.forEach(instructions, (instr) => {
+    let start = locationHash(0, c.contents, 0);
+    Belt.List.reduce(instructions, start, (loc, instr) => {
         switch instr {
-        | "R" => {
-            loc := turnright(loc.contents);
-            //Js.Console.log("Turned R, arrived at " ++ Belt.Int.toString(loc.contents));
-        };
-        | "L" => {
-            loc := turnleft(loc.contents);
-            //Js.Console.log("Turned L, arrived at " ++ Belt.Int.toString(loc.contents));
-        };
+        | "R" => turnright(loc);
+        | "L" => turnleft(loc);
         | x   => {
-            let dist = Belt.Int.fromString(x) -> Js.Option.getWithDefault(0, _);
+            let dist = Belt.Int.fromString(x) -> Belt.Option.getWithDefault(0);
             if dist == 0 {
                 Js.Console.log("Failed to parse integer!");
             };
-            for _ in 1 to dist {
-                loc := Belt.Map.Int.get(mazeMap, loc.contents) -> Js.Option.getWithDefault(0, _);
-                //if loc.contents == 0 {
-                    //Js.Console.log("Failed table lookup!");
-                //};
+            let rec takeSteps = (l, steps) => switch steps {
+            | 0 => l
+            | x => takeSteps(
+                Belt.Map.Int.get(mazeMap, l) -> Belt.Option.getWithDefault(0),
+                x - 1
+            );
             };
-            //Js.Console.log("Moved " ++ Belt.Int.toString(dist) ++ ", arrived at " ++ Belt.Int.toString(loc.contents));
+            takeSteps(loc, dist);
         };
         };
     });
-    loc.contents;
 };
 
 let parseInput = (bigString) => {
