@@ -1,0 +1,49 @@
+import File from "sys/file"
+import ImmutableSet from "immutableset"
+import List from "list"
+import ImmutableMap from "immutablemap"
+import Option from "option"
+
+let getElves = (filename) => [(0, 0), (1, 1)]
+
+let makeProp = (elf, elfSet) => elf
+
+let makeFreqTable = (theList) => (
+    List.reduce(
+        (table, elem) => ImmutableMap.set(
+            elem,
+            Option.unwrapWithDefault(
+                0,
+                ImmutableMap.get(elem, table)
+            ),
+            table
+        ),
+        ImmutableMap.empty,
+        theList
+    )
+)
+
+let main = () => {
+    let mut elves = getElves("input23.txt")
+    let mut timer = 0
+    let mut carryOn = true
+    while (carryOn) {
+        carryOn = false
+        let elfSet = ImmutableSet.fromList(elves)
+        let elfProps = List.map((elf) => makeProp(elf, elfSet), elves)
+        let elfPropsFT = makeFreqTable(elfProps)
+        elves = List.zipWith(
+            (elf, prop) => (
+                if (Option.unwrap(ImmutableMap.get(prop, elfPropsFT)) == 1) {
+                    carryOn = true
+                    prop
+                } else
+                    elf
+            ),
+            elves, elfProps
+        )
+    }
+    print("Done!")
+}
+
+main()
