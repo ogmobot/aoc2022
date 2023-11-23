@@ -1,26 +1,117 @@
 import File from "sys/file"
+// "Many of the functions in this module are not intended to be
+// used directly, but rather for other libraries to be built on
+// top of them."
+
 import ImmutableSet from "immutableset"
 import List from "list"
 import ImmutableMap from "immutablemap"
 import Option from "option"
+import Range from "range"
+import Result from "result"
+import String from "string"
 
-let getElves = (filename) => [(0, 0), (1, 1)]
-
-let makeProp = (elf, elfSet) => elf
-
-let makeFreqTable = (theList) => (
-    List.reduce(
-        (table, elem) => ImmutableMap.set(
-            elem,
-            Option.unwrapWithDefault(
-                0,
-                ImmutableMap.get(elem, table)
-            ),
-            table
-        ),
-        ImmutableMap.empty,
-        theList
+let strToElfList = (text) => {
+    let mut row = 0
+    let mut col = 0
+    List.map(
+        Option.unwrap,
+        List.filter(
+            Option.isSome,
+            Range.map(
+                (i) => {
+                    match (String.charAt(i, text)) {
+                        '#' => {
+                            col = col + 1
+                            Some((row, col - 1))
+                        },
+                        '\n' => {
+                            col = 0
+                            row = row + 1
+                            None
+                        },
+                        _ => {
+                            col = col + 1
+                            None
+                        }
+                    }
+                },
+                Range.Exclusive(0, String.length(text))
+            )
+        )
     )
+}
+
+let getElves = (filename) => {
+    let inputFile = Result.expect(
+        "Failed to open file!",
+        File.pathOpen(
+            File.pwdfd, [],
+            filename, [],
+            [File.FdRead], [],
+            [File.Sync]
+        )
+    )
+    let (inputContents, _) = Result.expect(
+        "Failed to read from file!",
+        File.fdRead(inputFile, 999999)
+    )
+    strToElfList(inputContents)
+}
+
+let makeProp = (elf, elfSet) => {
+    let (r, c) = elf
+    if (List.every(
+        (coord) => !ImmutableSet.contains(coord, elfSet),
+        [(r - 1, c - 1), (r - 1, c), (r - 1, c + 1),
+         (r    , c - 1),             (r    , c + 1),
+         (r + 1, c - 1), (r + 1, c), (r + 1, c + 1)]
+    )) {
+        (r, c)
+    } else {
+        if (List.some(
+            (coord) => ImmutableSet.contains(coord, elfSet),
+            [(r - 1, c - 1), (r - 1, c), (r - 1, c + 1)]
+        )) {
+            // North is blocked
+            if (List.some(
+                (coord) => ImmutableSet.contains(coord, elfSet),
+                [(r + 1, c - 1), (r + 1, c), (r + 1, c + 1)]
+            )) {
+                // South is blocked
+                if (List.some(
+                    (coord) => ImmutableSet.contains(coord, elfSet),
+                    [(r - 1, c - 1), (r, c - 1), (r + 1, c - 1)]
+                )) {
+                    // West is blocked
+                    if (List.some(
+                        (coord) => ImmutableSet.contains(coord, elfSet),
+                        [(r - 1, c + 1), (r, c + 1), (r + 1, c + 1)]
+                    )) {
+                        // East is blocked
+                        (r, c)
+                    } else
+                        (r, c + 1)
+                } else
+                    (r, c - 1)
+            } else
+                (r + 1, c)
+        } else
+            (r - 1, c)
+    }
+}
+
+let makeFreqTable = (theList) => List.reduce(
+    (table, elem) => ImmutableMap.set(
+        elem,
+        Option.unwrapWithDefault(
+            0,
+            ImmutableMap.get(elem, table)
+        ),
+        table
+    ),
+    ImmutableMap.empty,
+    theList
 )
 
 let main = () => {
@@ -42,8 +133,12 @@ let main = () => {
             ),
             elves, elfProps
         )
+        timer = timer + 1
+        if (timer == 10) {
+            print("Round 10...")
+        }
     }
-    print("Done!")
+    print(timer)
 }
 
 main()
