@@ -252,6 +252,18 @@ I solved the problem in a quite different way to the Python program. Rather than
 
 **Syntax Highlight**: ` ` (there's no `return` keyword -- the result of a function is the value of the last expression within it)
 
+Day 23: Grain
+-------------
+The language ain't bad, but the compiler takes too long. Grain compiles to WebAssembly, which is a cool idea (especially for web applications), but the compiler I downloaded seems to be doing something to the entire standard library when I run it -- compiling, or transpiling, or linking, or something. This made it very frustrating to test and iterate on my program.
+
+The language is definitely functional (har har). It seems to take a fair bit of inspiration (not to mention libraries) from OCaml. I couldn't find anything in the documentation about the `|>` operator, so I didn't use it in this solution, but the language certainly feels like it *should* be available. 
+
+I wrote this program in a way that I'm pretty sure is O(n) per simulation step, but it still takes a very long time to run. I'm not sure whether this is the fault of Grain, WebAssembly, or me. (Each step, convert the elf-list to a hash set [O(n)], have each elf make a proposal [O(n), using hash set to check occupancy], build a frequency table of proposals [O(n)], and move each elf if the frequency of its proposal was 1 [O(n)].)
+
+**Grain**: OCaml for WebAssembly.
+
+**Syntax Highlight**: `File.pwdfd` (a library function that returns the program's working directory, as a String like `"."` is not a directory)
+
 Day 25: Scratch
 ---------------
 (I did this one out-of-order, between days 16 and 17.) Scratch is a great language -- for learning -- but it has its flaws. For instance, subroutines don't return values. There's probably some actor-based message-sending workaround, but I just had the subroutines modify global variables. I read somewhere that the language was to some extent inspired by LISP (mostly via Smalltalk). After setting up the arithmetic in this program, and always selecting the operator first, I can see some of that influence. I was also happy to learn that the language supports recursion, another rather LISPy idea.
