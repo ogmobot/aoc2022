@@ -11,35 +11,31 @@ import Range from "range"
 import Result from "result"
 import String from "string"
 
+enum Direction { North, East, South, West }
+
 let strToElfList = (text) => {
     let mut row = 0
     let mut col = 0
-    List.map(
-        Option.unwrap,
-        List.filter(
-            Option.isSome,
-            Range.map(
-                (i) => {
-                    match (String.charAt(i, text)) {
-                        '#' => {
-                            col = col + 1
-                            Some((row, col - 1))
-                        },
-                        '\n' => {
-                            col = 0
-                            row = row + 1
-                            None
-                        },
-                        _ => {
-                            col = col + 1
-                            None
-                        }
-                    }
+    let mut result = []
+    Range.forEach(
+        (i) => {
+            match (String.charAt(i, text)) {
+                '#' => {
+                    result = List.insert((row, col), 0, result)
+                    col = col + 1
                 },
-                Range.Exclusive(0, String.length(text))
-            )
-        )
+                '\n' => {
+                    col = 0
+                    row = row + 1
+                },
+                _ => {
+                    col = col + 1
+                }
+            }
+        },
+        Range.Exclusive(0, String.length(text))
     )
+    result
 }
 
 let getElves = (filename) => {
@@ -59,8 +55,16 @@ let getElves = (filename) => {
     strToElfList(inputContents)
 }
 
-let makeProp = (elf, elfSet) => {
+let dirCoords = (r, c, dir) => match (dir) {
+    North => ((r - 1, c - 1), (r - 1, c), (r - 1, c + 1)),
+    South => ((r + 1, c - 1), (r + 1, c), (r + 1, c + 1)),
+    West  => ((r - 1, c - 1), (r, c - 1), (r + 1, c - 1)),
+    East  => ((r - 1, c + 1), (r, c + 1), (r + 1, c + 1))
+}
+
+let makeProp = (elf, elfSet, dirOrder) => {
     let (r, c) = elf
+    let (dirA, dirB, dirC, dirD) = dirOrder
     if (List.every(
         (coord) => !ImmutableSet.contains(coord, elfSet),
         [(r - 1, c - 1), (r - 1, c), (r - 1, c + 1),
@@ -69,35 +73,27 @@ let makeProp = (elf, elfSet) => {
     )) {
         (r, c)
     } else {
-        if (List.some(
-            (coord) => ImmutableSet.contains(coord, elfSet),
-            [(r - 1, c - 1), (r - 1, c), (r - 1, c + 1)]
-        )) {
-            // North is blocked
-            if (List.some(
-                (coord) => ImmutableSet.contains(coord, elfSet),
-                [(r + 1, c - 1), (r + 1, c), (r + 1, c + 1)]
-            )) {
-                // South is blocked
+        let (dirA, dirB, dirC, dirD) = dirOrder
+        let opts = List.map(
+            (dir) => {
+                let (coordA, coordB, coordC) = dirCoords(r, c, dir)
                 if (List.some(
                     (coord) => ImmutableSet.contains(coord, elfSet),
-                    [(r - 1, c - 1), (r, c - 1), (r + 1, c - 1)]
-                )) {
-                    // West is blocked
-                    if (List.some(
-                        (coord) => ImmutableSet.contains(coord, elfSet),
-                        [(r - 1, c + 1), (r, c + 1), (r + 1, c + 1)]
-                    )) {
-                        // East is blocked
-                        (r, c)
-                    } else
-                        (r, c + 1)
-                } else
-                    (r, c - 1)
-            } else
-                (r + 1, c)
-        } else
-            (r - 1, c)
+                    [coordA, coordB, coordC]
+                ))
+                    None
+                else
+                    Some(coordB)
+            },
+            [dirA, dirB, dirC, dirD]
+        )
+        let dest = List.find(Option.isSome, opts)
+        Option.unwrap(
+            Option.unwrapWithDefault(
+                Some((r, c)),
+                dest
+            )
+        )
     }
 }
 
@@ -107,38 +103,60 @@ let makeFreqTable = (theList) => List.reduce(
         Option.unwrapWithDefault(
             0,
             ImmutableMap.get(elem, table)
-        ),
+        ) + 1,
         table
     ),
     ImmutableMap.empty,
     theList
 )
 
+let findScore = (elfList) => {
+    let (minr, minc, maxr, maxc) = List.reduce(
+        ((minr, minc, maxr, maxc), (r, c)) => (
+            if (r < minr) r else minr,
+            if (c < minc) c else minc,
+            if (r > maxr) r else maxr,
+            if (c > maxc) c else maxc
+        ),
+        (0, 0, 0, 0), // should probably use first elf's coords instead
+        elfList
+    )
+    ((1 + maxr - minr) * (1 + maxc - minc)) - List.length(elfList)
+}
+
+let rec simulate = (elves, timer, dirOrder) => {
+    if (timer == 10)
+        print(findScore(elves))
+    let mut carryOn = false
+    let elfSet = ImmutableSet.fromList(elves)
+    let elfProps = List.map((elf) => makeProp(elf, elfSet, dirOrder), elves)
+    let elfPropsFT = makeFreqTable(elfProps)
+    let newElves = List.zipWith(
+        (elf, prop) => {
+            //print(elf)
+            //print(prop)
+            if (Option.unwrap(ImmutableMap.get(prop, elfPropsFT)) == 1) {
+                if (elf != prop) {
+                    carryOn = true
+                }
+                prop
+            } else {
+                elf
+            }
+        },
+        elves, elfProps
+    )
+    if (carryOn) {
+        let (dirA, dirB, dirC, dirD) = dirOrder
+        simulate(newElves, timer + 1, (dirB, dirC, dirD, dirA))
+    } else {
+        timer + 1
+    }
+}
+
 let main = () => {
     let mut elves = getElves("input23.txt")
-    let mut timer = 0
-    let mut carryOn = true
-    while (carryOn) {
-        carryOn = false
-        let elfSet = ImmutableSet.fromList(elves)
-        let elfProps = List.map((elf) => makeProp(elf, elfSet), elves)
-        let elfPropsFT = makeFreqTable(elfProps)
-        elves = List.zipWith(
-            (elf, prop) => (
-                if (Option.unwrap(ImmutableMap.get(prop, elfPropsFT)) == 1) {
-                    carryOn = true
-                    prop
-                } else
-                    elf
-            ),
-            elves, elfProps
-        )
-        timer = timer + 1
-        if (timer == 10) {
-            print("Round 10...")
-        }
-    }
-    print(timer)
+    print(simulate(elves, 0, (North, South, West, East)))
 }
 
 main()
