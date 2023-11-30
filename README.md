@@ -268,7 +268,7 @@ Day 24: F#
 ----------
 The third ML-like language in a row (I swear I didn't know that ReScript and Grain were based on ML prior to using them!). This language's access to all of the .NET/Mono data types and functions made it feel a lot more complete than the other two. The language feels almost identical to OCaml (by design). Unlike the previous two days' solutions, I introduced a slew of custom data types for this solution, which made it a lot easier to keep track of data moving through the program.
 
-All of these OCaml-like languages are strongly-typed and functional (i.e. first-class functions, immutable data by default), and I'm a big fan of this. At the end of my Kotlin program last year (`day18.kts`), I ranked the JVM languages I had used up to that point. For OCaml-like languages, my ranking so far would be OCaml > F# > ReScript > Grain. (That last one is still under development, of course.)
+All of these OCaml-like languages are strongly-typed and functional (i.e. first-class functions, immutable data by default), and I'm a big fan of this. At the end of my Kotlin program last year (`day18.kts`), I ranked the JVM languages I had used up to that point. For OCaml-like languages, my ranking so far would be OCaml > F# > ReScript > Grain. (That last one is still under development, of course.) Does Elixir count as one?
 
 **F#**: OCaml, by Microsoft.
 
@@ -284,3 +284,21 @@ Rather than provide the `.sb3` save file, I've provided a `.png` image of the co
 
 **Syntax Highlight**: `When I receive [...]` (event-based program flow)
 
+Conclusion
+==========
+It took a whole year to get around to finishing this challenge in the 25 non-Python languages I had aimed for. Some languages were nicer to use than I had expected (Groovy, AWK, Uxntal, Noulith, MoonScript, Prolog, Tcl, ReScript); some were a lot more finicky than I had hoped (Forth, Chapel, Hare, Terra, Uiua); some were basically just there for the challenge (INTCODE, 6502 Assembly, BASIC, Scratch); some were tough to work with due to being under active development (Koka, Roc, Grain); and some were languages that I felt I already knew pretty well, even if I hadn't used them much before (C#, JavaScript, Femtolisp, Idris, F#).
+
+I think solving these in Python first was the right decision. I'll likely do the same for the 2023 challenge, unless there's a compelling reason not to. Will I do another 25 languages after that? Maybe. Over the last year, I've managed to add *more* than 25 items to my list of languages to try...
+
+Here's my pick of languages I think I would use for different tasks:
+* Favourite fast language: C (but I'd use C++ if I needed good data structures)
+* Favourite JVM language: Scala
+* Favourite compiles-to-JavaScript langauge: ReScript
+* Favourite compiles-to-Lua langauge: MoonScript
+* Favourite golfing langauge: J
+* Favourite LISP: Common Lisp
+* Favourite ML: OCaml
+* Favourite OOP language: Crystal
+* Favourite parallel language: honestly I haven't found anything really compelling so far -- maybe a functional language that gets parallel stuff like `map` for free?
+* Favourite assembly language: Uxntal
+* Favourite language for quick-and-dirty programs like Advent of Code: Python (because I'm more familiar with it than Tcl, AWK, JavaScript, Noulith or Slouch; it's less strict than OCaml, Nim or C++; and it's got more libraries and data structures than C, BASIC or Lua)
