@@ -196,7 +196,7 @@ Day 18: [Uiua](https://uiua.org)
 --------------------------------
 Uiua was a language I wanted to like, but the process of actually writing a program ended up being frustrating. The greatest annoyance was writing function applications in reverse order of many other languages; programs are read right-to-left, top-to-bottom. The author has been asked about this design choice enough times that its justification now has a dedicated web page. (It didn't lessen the annoyance.)
 
-An example: To evaluate `f(g(h(x)))`, another language might use something like `x.h().g().f()` (like Rust), or `(->> x h g f)` (like Clojure), or `x |> h |> g |> f` (like OCaML), or even just `X H G F` (like Forth). Uiua, by contrast, writes this as `f g h x`. The only other language that follows this sort of pattern is LISP, but that language's brackets make it easier to parse: `(f (g (h x)))`. I suppose I could have avoided this annoyance by writing each word on its own line, or perhaps writing a pre-processor that reversed the order of words on each line.
+An example: To evaluate `f(g(h(x)))`, another language might use something like `x.h().g().f()` (like Rust), or `(->> x h g f)` (like Clojure), or `x |> h |> g |> f` (like OCaml), or even just `X H G F` (like Forth). Uiua, by contrast, writes this as `f g h x`. The only other language that follows this sort of pattern is LISP, but that language's brackets make it easier to parse: `(f (g (h x)))`. I suppose I could have avoided this annoyance by writing each word on its own line, or perhaps writing a pre-processor that reversed the order of words on each line.
 
 Rather than learning the meaning of each glyph used by the language, I elected to spell out the name of each function with letters.
 
@@ -264,6 +264,16 @@ I wrote this program in a way that I'm pretty sure is O(n) per simulation step, 
 
 **Syntax Highlight**: `File.pwdfd` (a library function that returns the program's working directory, as a String like `"."` is not a directory)
 
+Day 24: F#
+----------
+The third ML-like language in a row (I swear I didn't know that ReScript and Grain were based on ML prior to using them!). This language's access to all of the .NET/Mono data types and functions made it feel a lot more complete than the other two. The language feels almost identical to OCaml (by design). Unlike the previous two days' solutions, I introduced a slew of custom data types for this solution, which made it a lot easier to keep track of data moving through the program.
+
+All of these OCaml-like languages are strongly-typed and functional (i.e. first-class functions, immutable data by default), and I'm a big fan of this. At the end of my Kotlin program last year (`day18.kts`), I ranked the JVM languages I had used up to that point. For OCaml-like languages, my ranking so far would be OCaml > F# > ReScript > Grain. (That last one is still under development, of course.)
+
+**F#**: OCaml, by Microsoft.
+
+**Syntax Highlight**: `<-` (assign to a mutable variable)
+
 Day 25: Scratch
 ---------------
 (I did this one out-of-order, between days 16 and 17.) Scratch is a great language -- for learning -- but it has its flaws. For instance, subroutines don't return values. There's probably some actor-based message-sending workaround, but I just had the subroutines modify global variables. I read somewhere that the language was to some extent inspired by LISP (mostly via Smalltalk). After setting up the arithmetic in this program, and always selecting the operator first, I can see some of that influence. I was also happy to learn that the language supports recursion, another rather LISPy idea.
@@ -273,3 +283,4 @@ Rather than provide the `.sb3` save file, I've provided a `.png` image of the co
 **Scratch**: it may be for kids, but you can [run Linux on top of it](https://scratch.mit.edu/users/bilman66/)!
 
 **Syntax Highlight**: `When I receive [...]` (event-based program flow)
+
